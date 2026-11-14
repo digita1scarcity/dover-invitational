@@ -1,0 +1,1056 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="theme-color" content="#151916">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dover">
+<title>Dover Invitational</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<script src="supabase-config.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a contact sheet. Charcoal sheet, each section a "print" on it, film-edge strip for holes, fixed bottom tab bar.
+   Single dark look by choice (last year's contact sheets), tuned for high contrast in sun. */
+:root {
+  color-scheme: dark;
+  --bg: #151916;        /* contact-sheet charcoal, leaning to the badge's green */
+  --surface: #20251f;   /* a print's frame */
+  --sunk: #2a3029;
+  --ink: #f4eedb;       /* badge cream */
+  --muted: #b5af9b;
+  --line: #353c35;
+  --sky: #5ca9e3;       /* the badge's ocean */
+  --sky-deep: #3a86cf;
+  --fair: #6cb35a;      /* fairway */
+  --fair-deep: #10512c; /* badge enamel green */
+  --fair-ink: #0b1608;
+  --flag: #dcb44f;      /* badge gold */
+  --t-jer: #7cb6f5;     /* blue polo */
+  --t-sco: #f0604a;     /* red polo */
+  --t-dan: #dcc38f;     /* khaki */
+  --good: #8fcf68; --bad: #f27b67;
+  --f-display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+  --f-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --r: 3px;
+}
+:root { padding-top: env(safe-area-inset-top, 0px) }
+[hidden] { display: none !important }
+img { max-width: 100%; display: block }
+* { box-sizing: border-box }
+body { margin: 0; -webkit-text-size-adjust: 100%; background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 calc(84px + env(safe-area-inset-bottom, 0px)); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg) }
+.wrap { max-width: 640px; margin: 0 auto }
+button, select, input { font: inherit; color: inherit }
+button { cursor: pointer }
+:focus-visible { outline: 3px solid var(--flag); outline-offset: 2px }
+.num, td, .tab { font-variant-numeric: tabular-nums }
+header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg);
+  display: flex; align-items: center; gap: 10px; padding-block: 10px 10px; border-bottom: 1px solid var(--line) }
+header.top h1 { font-family: var(--f-display); font-style: italic; font-weight: 400; font-size: 28px; margin: 0; line-height: .95; letter-spacing: -.01em }
+header.top .sub { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--flag); margin-top: 5px }
+.sync { margin-left: auto; font-family: var(--f-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; padding: 4px 8px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; margin-bottom: 2px }
+.sync.live { color: var(--fair); border-color: color-mix(in srgb, var(--fair) 40%, transparent) }
+.sync.live::before { content: "● " }
+.sync.local { color: var(--flag) }
+h2 { font-family: var(--f-display); font-weight: 400; font-size: 30px; line-height: 1.05; margin: 30px 0 4px; text-wrap: balance }
+h2 .frame { font-family: var(--f-mono); font-size: 11px; letter-spacing: .12em; color: var(--flag); vertical-align: 6px; margin-right: 8px }
+h3 { font-family: var(--f-display); font-weight: 400; font-size: 24px; margin: 0; line-height: 1.1 }
+.lede { color: var(--muted); font-size: 13.5px; margin: 0 0 12px }
+.eyebrow { font-family: var(--f-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted) }
+/* team colors */
+.tjer { --tc: var(--t-jer) } .tsco { --tc: var(--t-sco) } .tdan { --tc: var(--t-dan) }
+.tname { color: var(--tc); font-weight: 600 }
+.chip-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--tc); margin-right: 6px; vertical-align: 1px }
+/* the Dover house, out of the badge */
+.house-ic { width: 52px; height: auto; flex: 0 0 auto; margin-bottom: 2px }
+.hero { padding: 16px 0 8px; border-bottom: 1px solid var(--line) }
+.house-print { margin: 0 0 14px; background: #0d0d0c; padding: 6px 6px 20px; border-radius: 2px; position: relative }
+.house-art { display: block; width: 100%; height: auto }
+.house-print figcaption, .film figcaption { position: absolute; left: 9px; bottom: 4px; font-family: var(--f-mono); font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; color: #e5a03a }
+.hero-t { min-width: 0 }
+.hero-t .eyebrow { color: var(--flag) }
+.hero-name { font-family: var(--f-display); font-size: clamp(34px, 9vw, 48px); line-height: .95; margin: 4px 0 8px; text-wrap: balance }
+.hero-sub { font-family: var(--f-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted) }
+/* last year's film */
+.film { margin: 22px 0 0; background: #0d0d0c; padding: 6px 6px 20px; border-radius: 2px; position: relative }
+.film img { width: 100%; height: auto; aspect-ratio: var(--ar); object-fit: cover; background: #222 }
+.film + h2 { margin-top: 14px }
+.roll { display: flex; gap: 4px; overflow-x: auto; margin: 10px calc(-1 * max(16px, env(safe-area-inset-left, 0px))) 0; padding: 16px max(16px, env(safe-area-inset-left, 0px)); background: #0d0d0c;
+  scroll-snap-type: x proximity; scrollbar-width: none;
+  background-image: repeating-linear-gradient(90deg, transparent 0 6px, #3a3936 6px 13px, transparent 13px 18px), repeating-linear-gradient(90deg, transparent 0 6px, #3a3936 6px 13px, transparent 13px 18px);
+  background-size: 100% 5px, 100% 5px; background-position: 0 5px, 0 calc(100% - 5px); background-repeat: no-repeat }
+.roll::-webkit-scrollbar { display: none }
+.roll figure { margin: 0; flex: 0 0 auto; scroll-snap-align: start; position: relative }
+.roll img { height: 168px; width: auto; aspect-ratio: var(--ar); object-fit: cover; background: #222 }
+.roll figcaption { font-family: var(--f-mono); font-size: 9px; letter-spacing: .14em; color: #e5a03a; margin-top: 4px }
+@media (min-width: 640px) { .roll { margin-inline: 0; border-radius: 2px } }
+/* board: three prints */
+.teams { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 14px }
+.tcard { background: var(--surface); border-radius: var(--r); padding: 0 0 10px; overflow: hidden }
+.tcard::before { content: ""; display: block; height: 6px; background: var(--tc) }
+.tcard > * { padding-inline: 10px }
+.tcard .n { font-family: var(--f-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--tc); margin-top: 9px }
+.tcard .pts { font-family: var(--f-display); font-size: 52px; line-height: .95; margin: 4px 0 4px }
+.tcard .split { font-family: var(--f-mono); font-size: 10.5px; color: var(--muted) }
+.tcard .proj { font-size: 11px; color: var(--flag); margin-top: 3px }
+.tcard.lead { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--flag) 55%, transparent) }
+.tcard.lead .n::after { content: "  ▲ leading"; color: var(--flag) }
+.onLine { font-size: 12.5px; color: var(--muted); margin-top: 10px }
+.list { background: var(--surface); border-radius: var(--r); overflow: hidden }
+.row { display: flex; align-items: center; gap: 10px; padding: 12px; border-top: 1px solid var(--line); min-width: 0 }
+.row:first-child { border-top: 0 }
+.row .grow { flex: 1; min-width: 0 }
+.row .who { display: flex; flex-wrap: wrap; gap: 2px 6px; align-items: baseline; font-size: 15px }
+.row .vs { color: var(--muted); font-family: var(--f-display); font-style: italic; font-size: 16px }
+.row .meta { font-size: 12.5px; color: var(--muted); margin-top: 2px }
+.status { font-family: var(--f-mono); font-weight: 500; font-size: 14px; text-align: right; white-space: nowrap }
+.status.final { color: var(--ink) }
+.pill { display: inline-block; font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase; padding: 2px 6px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; margin-top: 3px }
+.pill.win { border-color: var(--tc); color: var(--tc) }
+.pill.cap { border-color: color-mix(in srgb, var(--flag) 60%, transparent); color: var(--flag); margin-top: 0 }
+table.std { width: 100%; border-collapse: collapse; font-size: 14.5px }
+table.std th { text-align: left; font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 500; padding: 9px 10px; border-bottom: 1px solid var(--line) }
+table.std td { padding: 10px; border-top: 1px solid var(--line) }
+table.std tr:first-child td { border-top: 0 }
+table.std .r { text-align: right }
+.big { font-family: var(--f-display); font-size: 26px; line-height: 1 }
+details.strokes { margin-top: 8px; font-size: 13.5px }
+details.strokes summary { color: var(--sky); font-weight: 600; cursor: pointer; padding: 6px 0 }
+.sgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 4px 14px; padding: 4px 0 6px }
+.sgrid div { display: flex; justify-content: space-between; border-bottom: 1px dotted var(--line); padding: 4px 0 }
+.sgrid b { font-family: var(--f-mono); font-weight: 500 }
+/* score entry */
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 14px }
+.seg button { border: 1px solid var(--line); background: transparent; border-radius: var(--r); padding: 9px 4px 8px; font-family: var(--f-display); font-size: 21px; line-height: 1; color: var(--muted) }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink) }
+.seg small { display: block; font-family: var(--f-mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; margin-top: 4px }
+.groups { display: flex; gap: 6px; overflow-x: auto; padding: 10px 0 2px; scrollbar-width: none }
+.groups button { flex: 0 0 auto; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 8px 13px; font-size: 13px; font-weight: 600; white-space: nowrap }
+.groups button[aria-pressed="true"] { border-color: var(--sky); background: var(--sky); color: #0d1a29 }
+.hole { background: var(--surface); border-radius: var(--r); margin-top: 12px; overflow: hidden }
+/* hole header: a frame of sky over fairway, like last year's shots */
+.hhead { display: grid; grid-template-columns: 54px 1fr 54px; align-items: center; color: #fff;
+  background: linear-gradient(180deg, #3f86d6 0%, #6fb0f2 48%, #a9d0f5 66%, #6aa846 66%, #4d8a2f 100%) }
+.hhead button { border: 0; background: transparent; color: inherit; font-size: 34px; height: 92px; text-shadow: 0 1px 6px rgb(0 0 0 / .35) }
+.hhead button:disabled { opacity: .3 }
+.hhead .c { text-align: center; padding-bottom: 6px }
+.hhead .hn { font-family: var(--f-display); font-size: 44px; line-height: 1; text-shadow: 0 2px 10px rgb(10 40 80 / .45) }
+.hhead .hi { font-family: var(--f-mono); font-size: 12px; font-weight: 500; letter-spacing: .04em; margin-top: 10px; color: #fff; text-shadow: 0 1px 3px rgb(0 0 0 / .55) }
+/* film edge with sprocket holes */
+.strip { position: relative; display: flex; gap: 2px; overflow-x: auto; padding: 14px 10px; background: #121211; scrollbar-width: none;
+  background-image: repeating-linear-gradient(90deg, transparent 0 6px, #3a3936 6px 13px, transparent 13px 18px), repeating-linear-gradient(90deg, transparent 0 6px, #3a3936 6px 13px, transparent 13px 18px);
+  background-size: 100% 5px, 100% 5px; background-position: 0 3px, 0 calc(100% - 3px); background-repeat: no-repeat }
+.strip button { flex: 0 0 auto; min-width: 32px; height: 30px; border: 0; background: transparent; font-family: var(--f-mono); font-size: 12px; font-weight: 500; color: #8a867c }
+.strip button.done { color: var(--flag) }
+.strip button.cur { background: var(--flag); color: #1b1408 }
+.strip .gap { width: 10px; flex: 0 0 auto }
+.ent { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 13px 12px; border-top: 1px solid var(--line) }
+.ent .nm { font-weight: 600; font-size: 17px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap }
+.ent .sm { font-size: 12.5px; color: var(--muted) }
+.dots { color: var(--flag); letter-spacing: 1px; font-size: 13px }
+.step { display: flex; align-items: center; gap: 6px }
+.step button { width: 54px; height: 54px; border-radius: var(--r); border: 1px solid #4a4a46; background: var(--sunk); font-size: 28px; font-weight: 400; line-height: 1; color: var(--ink) }
+.step button:active { transform: scale(.96); background: #3c3c39 }
+.step .val { width: 54px; text-align: center; font-family: var(--f-mono); font-weight: 600; font-size: 32px; line-height: 1 }
+.step .val.empty { color: var(--muted); opacity: .35 }
+.step .val.birdie { color: var(--good) }
+.step .val.bogey2 { color: var(--bad) }
+.clr { border: 0; background: none; color: var(--muted); font-size: 12px; text-decoration: underline; padding: 2px 0 }
+.hres { padding: 12px; background: #1f1f1e; border-top: 1px solid var(--line); font-size: 14px; display: flex; flex-direction: column; gap: 4px }
+.hres b { font-weight: 600 }
+.next { display: block; width: 100%; margin-top: 10px; border: 0; border-radius: var(--r); background: var(--fair); color: var(--fair-ink); font-weight: 700; font-size: 16px; padding: 16px }
+.card { overflow-x: auto; margin-top: 14px; background: var(--surface); border-radius: var(--r) }
+.card table { border-collapse: collapse; width: 100%; font-size: 13.5px; min-width: 320px; font-family: var(--f-mono) }
+.card th, .card td { padding: 7px 6px; text-align: center; border-top: 1px solid var(--line) }
+.card th { font-family: var(--f-body); font-size: 11px; color: var(--muted); font-weight: 600; border-top: 0; position: sticky; top: 0; background: var(--surface) }
+.card td:first-child, .card th:first-child { text-align: left; padding-left: 10px }
+.card tr.cur td { background: color-mix(in srgb, var(--flag) 16%, transparent) }
+.card tr.sub td { background: var(--sunk); font-weight: 600 }
+.card td sup { color: var(--flag); font-size: 9px }
+.card td.cnt { font-weight: 700; text-decoration: underline; text-decoration-color: var(--fair); text-underline-offset: 3px }
+.card .w { font-weight: 700; color: var(--tc) }
+/* setup */
+.form { background: var(--surface); border-radius: var(--r); padding: 4px 12px }
+.f { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 0; border-top: 1px solid var(--line) }
+.f:first-child { border-top: 0 }
+.f label { flex: 1; min-width: 0 }
+.f .hint { display: block; font-size: 12px; color: var(--muted) }
+.f input[type=number] { width: 84px; padding: 8px; border: 1px solid #4a4a46; border-radius: var(--r); background: var(--bg); text-align: right; font-family: var(--f-mono) }
+.f select { padding: 8px; border: 1px solid #4a4a46; border-radius: var(--r); background: var(--bg); max-width: 55% }
+.toggle { width: 26px; height: 26px; accent-color: var(--fair) }
+.idx td input { width: 72px; padding: 7px; border: 1px solid #4a4a46; border-radius: var(--r); background: var(--bg); text-align: right; font-family: var(--f-mono) }
+.flag { color: var(--flag); font-size: 12px }
+.note { font-size: 13.5px; padding: 12px; border-left: 3px solid var(--flag); background: color-mix(in srgb, var(--flag) 10%, var(--surface)); margin-top: 12px }
+.note ol { margin: 6px 0 0; padding-left: 20px }
+.note li { margin: 3px 0 }
+.btn { border: 1px solid #4a4a46; background: var(--sunk); border-radius: var(--r); padding: 10px 14px; font-weight: 600 }
+.btn.pri { background: var(--fair); color: var(--fair-ink); border-color: var(--fair) }
+.btn:disabled { opacity: .45 }
+textarea { width: 100%; min-height: 80px; border: 1px solid #4a4a46; border-radius: var(--r); background: var(--bg); color: var(--ink); padding: 8px; font: 12px var(--f-mono) }
+/* weather: each course a print with a sky band */
+.wx { background: var(--surface); border-radius: var(--r); margin-top: 12px; overflow: hidden }
+.wx .skyband { height: 10px; background: linear-gradient(90deg, var(--sky-deep), var(--sky) 60%, var(--flag)) }
+.wx .body { padding: 14px }
+.wx .d { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap }
+.wx .temps { font-family: var(--f-display); font-size: 44px; line-height: 1 }
+.wx .facts { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px 14px; margin-top: 12px; font-size: 13.5px }
+.wx .facts span { color: var(--muted); display: block; font-family: var(--f-mono); font-size: 10px; text-transform: uppercase; letter-spacing: .1em }
+.wx a, .lede a, .note a { color: var(--sky); font-weight: 600 }
+/* tab bar */
+nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background: #121211; border-top: 1px solid var(--line);
+  display: grid; grid-template-columns: repeat(4, 1fr); padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px)) }
+nav.tabs a { text-decoration: none; color: #8f8b80; text-align: center; font-family: var(--f-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; padding: 7px 0 6px }
+nav.tabs a .ic { display: block; font-family: var(--f-display); font-style: italic; font-size: 22px; letter-spacing: 0; text-transform: none; line-height: 1.05; color: var(--ink) }
+nav.tabs a[aria-current="page"] { color: var(--flag) }
+nav.tabs a[aria-current="page"] .ic { color: var(--flag) }
+.empty-msg { color: var(--muted); font-size: 14px; padding: 14px 12px }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important } }
+</style>
+
+</head>
+<body>
+<header class="top wrap">
+  <svg class="house-ic" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 44" aria-hidden="true">
+<g fill="#f4ecd4" stroke="#dcb44f" stroke-width="1.2" stroke-linejoin="round">
+<path d="M22 22H9c-4 0-6 3-6 6v12h19z"/><rect x="22" y="14" width="13" height="26"/><rect x="25" y="8" width="17" height="6"/><rect x="42" y="16" width="14" height="24"/><path d="M35 40V15q0-3 3-3h3q3 0 3 3v25z"/>
+</g>
+<g fill="#10512c"><circle cx="39.5" cy="19" r="2.2"/><path d="M37.5 40v-8q0-2 2-2t2 2v8z"/><rect x="6" y="25" width="3" height="5"/><rect x="11" y="25" width="3" height="5"/><rect x="16" y="25" width="3" height="5"/><rect x="25" y="18" width="3" height="5"/><rect x="30" y="18" width="3" height="5"/><rect x="25" y="28" width="3" height="5"/><rect x="30" y="28" width="3" height="5"/><rect x="45" y="20" width="3" height="5"/><rect x="50" y="20" width="3" height="5"/><rect x="45" y="30" width="3" height="5"/><rect x="50" y="30" width="3" height="5"/></g>
+<path d="M1 40.5h62" stroke="#6cb35a" stroke-width="2"/>
+</svg>
+
+  <div>
+    <h1>Dover Invitational</h1>
+    <div class="sub">2026 · 54 holes · Nov 20–22</div>
+  </div>
+  <span class="sync" id="sync">Connecting…</span>
+</header>
+<main class="wrap" id="app"></main>
+<nav class="tabs" aria-label="Sections">
+  <a href="#board" data-tab="board"><span class="ic">⚑</span>Board</a>
+  <a href="#score" data-tab="score"><span class="ic">✎</span>Score</a>
+  <a href="#weather" data-tab="weather"><span class="ic">☀</span>Weather</a>
+  <a href="#setup" data-tab="setup"><span class="ic">⚙</span>Setup</a>
+</nav>
+
+<script>
+// ===== Golf weekend scoring engine (pure functions, no DOM) =====
+const COURSES = {
+  fri: {
+    key: 'fri', day: 'Friday', date: '2026-11-20', name: 'Sandpiper Golf Club', town: 'Goleta',
+    lat: 34.4285, lon: -119.8905, format: 'Four-man shamble',
+    par: [5,4,4,3,5,3,4,4,4, 4,3,4,5,4,5,4,4,3],
+    si:  [9,1,3,7,13,17,15,11,5, 6,12,18,4,2,10,8,14,16],
+    tees: {
+      Black:  { r: 75.0, s: 135, y: [530,471,430,258,513,195,394,399,420, 390,228,347,532,445,602,395,429,181] },
+      Gold:   { r: 72.6, s: 130, y: [511,447,407,226,495,173,368,370,401, 345,202,325,455,425,582,373,374,167] },
+      Silver: { r: 70.3, s: 126, y: [495,402,387,196,483,155,357,362,393, 321,172,306,405,385,540,348,353,136] },
+      Copper: { r: 67.6, s: 120, y: [454,376,353,165,430,125,333,350,368, 315,148,252,392,330,471,337,304,99] },
+    },
+    defTee: 'Gold',
+  },
+  sat: {
+    key: 'sat', day: 'Saturday', date: '2026-11-21', name: 'Soule Park Golf Club', town: 'Ojai',
+    lat: 34.4470, lon: -119.2210, format: '2v2 scramble match play',
+    par: [4,4,3,5,5,3,4,4,4, 3,5,4,4,4,4,3,4,5],
+    si:  [7,9,11,13,17,5,3,1,15, 14,12,8,16,2,4,10,6,18],
+    tees: {
+      Oak:              { r: 73.0, s: 128, y: [393,395,140,512,490,242,429,426,350, 160,551,427,370,427,461,172,410,501] },
+      Orange:           { r: 71.6, s: 125, y: [382,361,132,502,478,229,420,408,347, 155,513,420,357,420,418,162,392,492] },
+      'Orange/Avocado': { r: 70.7, s: 123, y: [382,328,132,502,478,190,420,310,347, 155,513,420,357,410,406,162,392,492] },
+      Avocado:          { r: 69.5, s: 120, y: [370,328,123,492,442,190,357,310,343, 142,501,382,344,410,406,156,384,479] },
+      Lime:             { r: 66.9, s: 114, y: [351,312,116,439,432,183,323,301,272, 139,460,371,309,355,330,151,354,429] },
+    },
+    defTee: 'Oak',
+  },
+  sun: {
+    key: 'sun', day: 'Sunday', date: '2026-11-22', name: 'Olivas Links', town: 'Ventura',
+    lat: 34.2410, lon: -119.2350, format: 'Front 9 best ball, back 9 singles',
+    par: [4,5,4,5,3,4,4,3,4, 4,4,4,3,5,4,4,3,5],
+    si:  [18,4,6,8,12,2,14,10,16, 11,5,9,7,3,13,1,17,15],
+    tees: {
+      Tour:      { r: 72.7, s: 126, y: [362,534,377,514,179,437,408,185,354, 407,424,376,201,563,365,479,151,502] },
+      Champions: { r: 71.2, s: 122, y: [351,529,356,510,167,420,395,164,344, 381,378,362,171,548,357,455,149,493] },
+      Club:      { r: 69.2, s: 117, y: [308,512,333,470,132,364,382,145,327, 320,370,352,156,519,345,441,138,483] },
+      Players:   { r: 65.8, s: 108, y: [290,464,292,457,106,324,331,115,255, 292,327,314,137,452,303,346,119,424] },
+    },
+    defTee: 'Tour',
+  },
+};
+
+const PLAYERS = [
+  { id: 'jeremy', name: 'Jeremy', team: 'jer', idx: 7.8 },
+  { id: 'daniel', name: 'Daniel', team: 'jer', idx: 5.5 },
+  { id: 'david',  name: 'David',  team: 'jer', idx: 33 },
+  { id: 'kyle',   name: 'Kyle',   team: 'jer', idx: 28 },
+  { id: 'fromer', name: 'Fromer', team: 'sco', idx: 9.6 },
+  { id: 'greg',   name: 'Greg',   team: 'sco', idx: 12.1 },
+  { id: 'josh',   name: 'Josh',   team: 'sco', idx: 15.6 },
+  { id: 'nolan',  name: 'Nolan',  team: 'sco', idx: 28 },
+  { id: 'dan',    name: 'Dan',    team: 'dan', idx: 11.0 },
+  { id: 'micah',  name: 'Micah',  team: 'dan', idx: 17.1 },
+  { id: 'fasky',  name: 'Fasky',  team: 'dan', idx: 19.8 },
+  { id: 'sivan',  name: 'Sivan',  team: 'dan', idx: 36 },
+];
+const TEAMS = [
+  { id: 'jer', name: 'Team Jeremy' },
+  { id: 'sco', name: 'Team Scott' },
+  { id: 'dan', name: 'Team Dan' },
+];
+
+const DEFAULT_CONFIG = {
+  idx: Object.fromEntries(PLAYERS.map(p => [p.id, p.idx])),
+  tees: { fri: 'Gold', sat: 'Oak', sun: 'Tour' },
+  capOne: true,
+  fri: { pct: 50, bestN: 2, pts: [3, 1.5, 0] },
+  sat: { low: 20, high: 40 },
+  sun: { pct: 100, swap: false, singles: ['auto', 'auto', 'auto'] },
+  matchPts: { win: 1, halve: 0.5 },
+};
+
+function mergeConfig(stored) {
+  const c = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+  if (!stored) return c;
+  for (const k of Object.keys(c)) {
+    if (stored[k] === undefined) continue;
+    if (c[k] && typeof c[k] === 'object' && !Array.isArray(c[k])) Object.assign(c[k], stored[k]);
+    else c[k] = stored[k];
+  }
+  return c;
+}
+
+const r1 = x => Math.round(x * 10) / 10;
+const pName = id => (PLAYERS.find(p => p.id === id) || { name: id }).name;
+const pTeam = id => (PLAYERS.find(p => p.id === id) || {}).team;
+
+// WHS course handicap, rounded to a whole number
+function courseHcp(cfg, round, pid) {
+  const c = COURSES[round], t = c.tees[cfg.tees[round]] || c.tees[c.defTee];
+  const par = c.par.reduce((a, b) => a + b, 0);
+  return Math.round(cfg.idx[pid] * t.s / 113 + (t.r - par));
+}
+
+// Spread `strokes` over a list of hole indexes (0-based) ranked by stroke index.
+// Returns {perHole: array(18) of strokes, given, capped}
+function allocate(cfg, round, strokes, holes) {
+  const si = COURSES[round].si;
+  const order = holes.slice().sort((a, b) => si[a] - si[b]);
+  const n = holes.length;
+  let given = Math.max(0, strokes), capped = false;
+  if (cfg.capOne && given > n) { given = n; capped = true; }
+  const perHole = Array(18).fill(0);
+  order.forEach((h, rank) => {
+    perHole[h] = Math.floor(given / n) + (rank < given % n ? 1 : 0);
+  });
+  return { perHole, given, wanted: Math.max(0, strokes), capped };
+}
+const ALL18 = [...Array(18).keys()];
+const FRONT = [0,1,2,3,4,5,6,7,8];
+const BACK = [9,10,11,12,13,14,15,16,17];
+
+// Match play status from per-hole results (+1 = side A won hole, -1 = B, 0 = halve, null = not played)
+function matchStatus(results, holes) {
+  let up = 0, played = 0, closed = null;
+  for (const h of holes) {
+    const r = results[h];
+    if (r === null || r === undefined) break;
+    up += r; played++;
+    const left = holes.length - played;
+    if (Math.abs(up) > left) { closed = { up, left }; break; }
+  }
+  const left = holes.length - played;
+  let final = false, winner = null, text;
+  if (closed) {
+    final = true; winner = closed.up > 0 ? 'A' : 'B';
+    text = closed.left === 0 ? `${Math.abs(closed.up)} up` : `${Math.abs(closed.up)}&${closed.left}`;
+  } else if (played === holes.length) {
+    final = true; winner = up > 0 ? 'A' : up < 0 ? 'B' : 'H';
+    text = up === 0 ? 'Halved' : `${Math.abs(up)} up`;
+  } else if (played === 0) {
+    text = 'Not started';
+  } else {
+    const lead = up === 0 ? 'All square' : `${Math.abs(up)} up`;
+    text = `${lead} thru ${played}` + (up !== 0 && Math.abs(up) === left ? ' (dormie)' : '');
+  }
+  return { up, played, final, winner, text, leader: up > 0 ? 'A' : up < 0 ? 'B' : null };
+}
+
+// ---- pairings ----
+const SAT_MATCHES = [
+  { a: ['dan', 'sivan'], b: ['daniel', 'kyle'] },
+  { a: ['micah', 'fasky'], b: ['greg', 'josh'] },
+  { a: ['jeremy', 'david'], b: ['fromer', 'nolan'] },
+];
+function sunGroups(cfg) {
+  const [x, y] = cfg.sun.swap ? ['fasky', 'micah'] : ['micah', 'fasky'];
+  return [
+    { a: ['dan', x], b: ['fromer', 'josh'] },
+    { a: [y, 'sivan'], b: ['david', 'kyle'] },
+    { a: ['jeremy', 'daniel'], b: ['greg', 'nolan'] },
+  ];
+}
+// Singles within a group: auto = closest course handicaps; 'straight' = 1v1,2v2; 'crossed' = 1v2,2v1
+function singlesFor(cfg, gi) {
+  const g = sunGroups(cfg)[gi];
+  const ch = id => courseHcp(cfg, 'sun', id);
+  const straight = [[g.a[0], g.b[0]], [g.a[1], g.b[1]]];
+  const crossed = [[g.a[0], g.b[1]], [g.a[1], g.b[0]]];
+  const mode = cfg.sun.singles[gi] || 'auto';
+  if (mode === 'straight') return { pairs: straight, mode };
+  if (mode === 'crossed') return { pairs: crossed, mode };
+  const d = ps => ps.reduce((s, [p, q]) => s + Math.abs(ch(p) - ch(q)), 0);
+  return { pairs: d(crossed) < d(straight) ? crossed : straight, mode };
+}
+
+// scores: { key: {h1..h18} } ; helpers
+const gross = (scores, key, h) => {
+  const d = scores[key]; if (!d) return null;
+  const v = d['h' + (h + 1)];
+  return typeof v === 'number' && v > 0 ? v : null;
+};
+
+// ---- Friday shamble ----
+function friday(cfg, scores) {
+  const ph = {};
+  for (const p of PLAYERS) ph[p.id] = Math.round(courseHcp(cfg, 'fri', p.id) * cfg.fri.pct / 100);
+  const low = Math.min(...PLAYERS.map(p => ph[p.id]));
+  const lowId = PLAYERS.find(p => ph[p.id] === low).id;
+  const alloc = {};
+  for (const p of PLAYERS) alloc[p.id] = allocate(cfg, 'fri', ph[p.id] - low, ALL18);
+  const par = COURSES.fri.par;
+  const teams = TEAMS.map(t => {
+    const members = PLAYERS.filter(p => p.team === t.id).map(p => p.id);
+    let total = 0, parTot = 0, thru = 0;
+    const holes = ALL18.map(h => {
+      const nets = members.map(id => {
+        const g = gross(scores, 'fri-' + id, h);
+        return g === null ? null : g - alloc[id].perHole[h];
+      });
+      const got = nets.filter(v => v !== null).sort((a, b) => a - b);
+      const n = Math.min(cfg.fri.bestN, members.length);
+      if (got.length < n) return { nets, team: null, used: [] };
+      const team = got.slice(0, n).reduce((a, b) => a + b, 0);
+      total += team; parTot += par[h] * n; thru++;
+      // mark which members counted (first matches of the lowest values)
+      const pool = got.slice(0, n), used = [];
+      nets.forEach((v, i) => { const k = pool.indexOf(v); if (v !== null && k >= 0) { used.push(i); pool.splice(k, 1); } });
+      return { nets, team, used };
+    });
+    return { id: t.id, name: t.name, members, holes, total, toPar: total - parTot, thru };
+  });
+  // standings by toPar (holes may differ while in progress); points split on ties
+  const sorted = teams.slice().sort((a, b) => a.toPar - b.toPar);
+  const pts = cfg.fri.pts;
+  let i = 0;
+  while (i < sorted.length) {
+    let j = i; while (j + 1 < sorted.length && sorted[j + 1].toPar === sorted[i].toPar) j++;
+    let sum = 0; for (let k = i; k <= j; k++) sum += pts[k] || 0;
+    for (let k = i; k <= j; k++) { sorted[k].pos = i + 1; sorted[k].tied = j > i; sorted[k].pts = sum / (j - i + 1); }
+    i = j + 1;
+  }
+  const final = teams.every(t => t.thru === 18);
+  return { ph, low, lowId, alloc, teams, sorted, final };
+}
+
+// ---- generic two-sided match ----
+function runMatch(cfg, round, holes, sideNet) {
+  const res = Array(18).fill(null);
+  for (const h of holes) {
+    const a = sideNet('A', h), b = sideNet('B', h);
+    if (a === null || b === null) continue;
+    res[h] = a < b ? 1 : a > b ? -1 : 0;
+  }
+  // results must be contiguous from first hole to count
+  return { res, status: matchStatus(res, holes) };
+}
+
+// ---- Saturday scramble ----
+function saturday(cfg, scores) {
+  return SAT_MATCHES.map((m, mi) => {
+    const side = ids => {
+      const chs = ids.map(id => courseHcp(cfg, 'sat', id));
+      const lo = Math.min(...chs), hi = Math.max(...chs);
+      return { chs, hcp: Math.round(lo * cfg.sat.low / 100 + hi * cfg.sat.high / 100) };
+    };
+    const A = side(m.a), B = side(m.b);
+    const diff = Math.abs(A.hcp - B.hcp);
+    const recv = A.hcp > B.hcp ? 'A' : B.hcp > A.hcp ? 'B' : null;
+    const alloc = allocate(cfg, 'sat', diff, ALL18);
+    const key = s => `sat-m${mi}-${s.toLowerCase()}`;
+    const strokes = (s, h) => (recv === s ? alloc.perHole[h] : 0);
+    const net = (s, h) => { const g = gross(scores, key(s), h); return g === null ? null : g - strokes(s, h); };
+    const { res, status } = runMatch(cfg, 'sat', ALL18, net);
+    return { mi, a: m.a, b: m.b, ta: pTeam(m.a[0]), tb: pTeam(m.b[0]), A, B, diff, recv, alloc, res, status, key, strokes, net };
+  });
+}
+
+// ---- Sunday ----
+function sunday(cfg, scores) {
+  const groups = sunGroups(cfg);
+  const ph9 = id => Math.round(courseHcp(cfg, 'sun', id) * cfg.sun.pct / 100 / 2);
+  return groups.map((g, gi) => {
+    // front 9 best ball, strokes off low man of the four
+    const four = [...g.a, ...g.b];
+    const lo = Math.min(...four.map(ph9));
+    const fAlloc = {};
+    for (const id of four) fAlloc[id] = allocate(cfg, 'sun', ph9(id) - lo, FRONT);
+    const pnet = (id, h) => { const v = gross(scores, 'sun-' + id, h); return v === null ? null : v - fAlloc[id].perHole[h]; };
+    const best = (s, h) => {
+      const ids = s === 'A' ? g.a : g.b;
+      const v = ids.map(id => pnet(id, h)).filter(x => x !== null);
+      // best ball needs at least one score; require both players entered or one picked up? use both entered
+      return v.length < ids.length ? null : Math.min(...v);
+    };
+    const front = runMatch(cfg, 'sun', FRONT, best);
+    // back 9 singles
+    const sg = singlesFor(cfg, gi);
+    const singles = sg.pairs.map(([pa, pb]) => {
+      const x = ph9(pa), y = ph9(pb);
+      const diff = Math.abs(x - y);
+      const recv = x > y ? 'A' : y > x ? 'B' : null;
+      const alloc = allocate(cfg, 'sun', diff, BACK);
+      const strokes = (s, h) => (recv === s ? alloc.perHole[h] : 0);
+      const net = (s, h) => { const id = s === 'A' ? pa : pb; const v = gross(scores, 'sun-' + id, h); return v === null ? null : v - strokes(s, h); };
+      const m = runMatch(cfg, 'sun', BACK, net);
+      return { a: pa, b: pb, ta: pTeam(pa), tb: pTeam(pb), ph: [x, y], diff, recv, alloc, strokes, ...m };
+    });
+    return { gi, a: g.a, b: g.b, ta: pTeam(g.a[0]), tb: pTeam(g.b[0]), ph9: Object.fromEntries(four.map(id => [id, ph9(id)])), lo, fAlloc, pnet, front, singles, mode: sg.mode };
+  });
+}
+
+// ---- weekend totals ----
+function weekend(cfg, scores) {
+  const F = friday(cfg, scores), S = saturday(cfg, scores), U = sunday(cfg, scores);
+  const tot = {}; for (const t of TEAMS) tot[t.id] = { fri: 0, sat: 0, sun: 0, live: 0, total: 0, proj: 0 };
+  // Friday
+  for (const t of F.teams) {
+    if (F.final) tot[t.id].fri = t.pts;
+    if (t.thru > 0) tot[t.id].live += F.final ? 0 : t.pts;
+  }
+  const W = cfg.matchPts.win, Hv = cfg.matchPts.halve;
+  const addMatch = (day, ta, tb, st) => {
+    if (st.final) {
+      if (st.winner === 'A') tot[ta][day] += W; else if (st.winner === 'B') tot[tb][day] += W;
+      else { tot[ta][day] += Hv; tot[tb][day] += Hv; }
+    } else if (st.played > 0) {
+      if (st.leader === 'A') tot[ta].live += W; else if (st.leader === 'B') tot[tb].live += W;
+      else { tot[ta].live += Hv; tot[tb].live += Hv; }
+    }
+  };
+  for (const m of S) addMatch('sat', m.ta, m.tb, m.status);
+  for (const g of U) {
+    addMatch('sun', g.ta, g.tb, g.front.status);
+    for (const s of g.singles) addMatch('sun', s.ta, s.tb, s.status);
+  }
+  for (const t of TEAMS) { const x = tot[t.id]; x.total = x.fri + x.sat + x.sun; x.proj = x.total + x.live; }
+  return { F, S, U, tot };
+}
+
+if (typeof module !== 'undefined') module.exports = { COURSES, PLAYERS, TEAMS, DEFAULT_CONFIG, mergeConfig, courseHcp, allocate, matchStatus, friday, saturday, sunday, weekend, singlesFor, sunGroups, FRONT, BACK, ALL18 };
+
+
+// ===== Art and photos =====
+const HOUSE = "<svg class=\"house-art\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 360 190\" role=\"img\" aria-label=\"The Dover house on the dunes above the ocean\">\n<defs>\n<linearGradient id=\"dvSky\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#8fc3ea\"/><stop offset=\".85\" stop-color=\"#e8efe3\"/></linearGradient>\n<linearGradient id=\"dvSea\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#2f7fc4\"/><stop offset=\"1\" stop-color=\"#5ca9e3\"/></linearGradient>\n<linearGradient id=\"dvGreen\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#2d7a3e\"/><stop offset=\"1\" stop-color=\"#10512c\"/></linearGradient>\n</defs>\n<rect width=\"360\" height=\"190\" fill=\"url(#dvSky)\"/>\n<g fill=\"#fff\" opacity=\".85\"><ellipse cx=\"300\" cy=\"34\" rx=\"22\" ry=\"6\"/><ellipse cx=\"314\" cy=\"30\" rx=\"12\" ry=\"6\"/><ellipse cx=\"48\" cy=\"52\" rx=\"16\" ry=\"4.5\"/><ellipse cx=\"58\" cy=\"49\" rx=\"9\" ry=\"4.5\"/></g>\n<g fill=\"none\" stroke=\"#3a4a44\" stroke-width=\"1.3\" stroke-linecap=\"round\"><path d=\"M258 52q4-4 8 0q4-4 8 0\"/><path d=\"M286 64q3-3 6 0q3-3 6 0\"/><path d=\"M70 30q3-3 6 0q3-3 6 0\"/></g>\n<rect y=\"118\" width=\"360\" height=\"22\" fill=\"url(#dvSea)\"/>\n<rect y=\"138\" width=\"360\" height=\"24\" fill=\"#e9dcb5\"/>\n<g stroke=\"#e8f3fb\" stroke-width=\"1\" opacity=\".7\" stroke-linecap=\"round\"><path d=\"M14 124h22M60 128h30M292 123h26M318 131h30M8 134h18\"/></g>\n<g stroke=\"#b08a2c\" stroke-width=\"1.1\" stroke-linejoin=\"round\">\n <!-- left rotunda wing -->\n <path d=\"M126 98H70c-15 0-24 9-24 22v32h80z\" fill=\"#f4ecd4\"/>\n <path d=\"M126 125H46\" fill=\"none\"/>\n <g fill=\"#1d5a3a\" stroke=\"none\">\n  <path d=\"M52 104h8v18h-10v-12c0-2 1-4 2-6z\"/><rect x=\"64\" y=\"103\" width=\"10\" height=\"19\"/><rect x=\"78\" y=\"103\" width=\"10\" height=\"19\"/><rect x=\"92\" y=\"103\" width=\"10\" height=\"19\"/><rect x=\"106\" y=\"103\" width=\"10\" height=\"19\"/>\n  <rect x=\"50\" y=\"129\" width=\"10\" height=\"19\"/><rect x=\"64\" y=\"129\" width=\"10\" height=\"19\"/><rect x=\"78\" y=\"129\" width=\"10\" height=\"19\"/><rect x=\"92\" y=\"129\" width=\"10\" height=\"19\"/><rect x=\"106\" y=\"129\" width=\"10\" height=\"19\"/>\n </g>\n <path d=\"M44 98h84\" fill=\"none\" stroke-width=\"1.6\"/>\n <path d=\"M48 98v-7M58 98v-7M68 98v-7M78 98v-7M88 98v-7M98 98v-7M108 98v-7M118 98v-7M48 91h78\" fill=\"none\"/>\n <!-- main block -->\n <rect x=\"126\" y=\"70\" width=\"58\" height=\"82\" fill=\"#f4ecd4\"/>\n <path d=\"M126 98h58M126 125h58\" fill=\"none\"/>\n <g fill=\"#1d5a3a\" stroke=\"none\">\n  <rect x=\"132\" y=\"76\" width=\"12\" height=\"16\"/><rect x=\"148\" y=\"76\" width=\"12\" height=\"16\"/><rect x=\"164\" y=\"76\" width=\"12\" height=\"16\"/>\n  <rect x=\"132\" y=\"103\" width=\"12\" height=\"17\"/><rect x=\"148\" y=\"103\" width=\"12\" height=\"17\"/><rect x=\"164\" y=\"103\" width=\"12\" height=\"17\"/>\n  <rect x=\"132\" y=\"130\" width=\"12\" height=\"17\"/><rect x=\"148\" y=\"130\" width=\"12\" height=\"17\"/><rect x=\"164\" y=\"130\" width=\"12\" height=\"17\"/>\n </g>\n <!-- top floor, set back, with flat roof -->\n <rect x=\"136\" y=\"50\" width=\"78\" height=\"20\" fill=\"#f4ecd4\"/>\n <path d=\"M130 50h90\" fill=\"none\" stroke-width=\"2\"/>\n <g fill=\"#1d5a3a\" stroke=\"none\"><rect x=\"142\" y=\"54\" width=\"12\" height=\"12\"/><rect x=\"158\" y=\"54\" width=\"12\" height=\"12\"/><rect x=\"196\" y=\"54\" width=\"12\" height=\"12\"/></g>\n <path d=\"M122 70h100\" fill=\"none\" stroke-width=\"1.6\"/>\n <path d=\"M124 70v-6M132 70v-6M216 70v-6M124 64h12M214 64h8\" fill=\"none\"/>\n <!-- entry tower with porthole -->\n <path d=\"M184 152V66q0-6 6-6h18q6 0 6 6v86z\" fill=\"#f7f0db\"/>\n <circle cx=\"199\" cy=\"80\" r=\"6.5\" fill=\"#1d5a3a\"/>\n <circle cx=\"199\" cy=\"80\" r=\"6.5\" fill=\"none\" stroke=\"#f7f0db\" stroke-width=\"1.4\"/>\n <rect x=\"194\" y=\"96\" width=\"10\" height=\"12\" fill=\"#1d5a3a\" stroke=\"none\"/>\n <path d=\"M192 152v-26q0-5 7-5t7 5v26z\" fill=\"#1d5a3a\"/>\n <path d=\"M199 121v31\" fill=\"none\" stroke=\"#c9a64a\"/>\n <!-- right wing with balconies -->\n <rect x=\"214\" y=\"72\" width=\"54\" height=\"80\" fill=\"#f4ecd4\"/>\n <path d=\"M214 100h54M214 126h54\" fill=\"none\"/>\n <g fill=\"#1d5a3a\" stroke=\"none\">\n  <rect x=\"220\" y=\"77\" width=\"12\" height=\"17\"/><rect x=\"236\" y=\"77\" width=\"12\" height=\"17\"/><rect x=\"252\" y=\"77\" width=\"10\" height=\"17\"/>\n  <rect x=\"220\" y=\"104\" width=\"12\" height=\"17\"/><rect x=\"236\" y=\"104\" width=\"12\" height=\"17\"/><rect x=\"252\" y=\"104\" width=\"10\" height=\"17\"/>\n  <rect x=\"220\" y=\"131\" width=\"12\" height=\"17\"/><rect x=\"236\" y=\"131\" width=\"12\" height=\"17\"/><rect x=\"252\" y=\"131\" width=\"10\" height=\"17\"/>\n </g>\n <path d=\"M212 72h60\" fill=\"none\" stroke-width=\"1.6\"/>\n <g fill=\"none\"><path d=\"M214 100h58v-9h-58M220 100v-9M228 100v-9M236 100v-9M244 100v-9M252 100v-9M260 100v-9M268 100v-9\"/>\n <path d=\"M214 126h58v-9h-58M220 126v-9M228 126v-9M236 126v-9M244 126v-9M252 126v-9M260 126v-9M268 126v-9\"/></g>\n <!-- steps -->\n <path d=\"M188 152h22v4h-22zM186 156h26v4h-26z\" fill=\"#e6dcbf\"/>\n</g>\n<!-- dunes and hedges -->\n<g transform=\"translate(0 6)\">\n<path d=\"M0 156c20-10 40-12 58-6c14-8 30-9 46-2c14-7 30-6 44 0c16-6 32-6 50 0c18-8 38-8 56-1c16-7 34-7 52 0c18-6 38-6 54 2v31H0z\" fill=\"#3f8a4a\"/>\n<path d=\"M0 166c28-8 56-8 84-2c30-8 62-8 94-1c30-7 62-7 92 0c30-6 60-5 90 2v25H0z\" fill=\"url(#dvGreen)\"/>\n<g fill=\"#2a6b38\"><circle cx=\"60\" cy=\"152\" r=\"7\"/><circle cx=\"72\" cy=\"150\" r=\"8\"/><circle cx=\"84\" cy=\"153\" r=\"6\"/><circle cx=\"150\" cy=\"152\" r=\"7\"/><circle cx=\"162\" cy=\"150\" r=\"7\"/><circle cx=\"232\" cy=\"151\" r=\"7\"/><circle cx=\"246\" cy=\"149\" r=\"8\"/><circle cx=\"259\" cy=\"152\" r=\"6\"/><circle cx=\"300\" cy=\"152\" r=\"6\"/><circle cx=\"312\" cy=\"150\" r=\"7\"/></g>\n<g stroke=\"#a7c46a\" stroke-width=\"1\" stroke-linecap=\"round\" fill=\"none\" opacity=\".8\"><path d=\"M22 176l-3-9M25 176l1-10M28 176l4-8M330 174l-4-9M333 174l0-10M336 174l4-8\"/></g>\n</g>\n<!-- the flag -->\n<g><path d=\"M316 180v-26\" stroke=\"#f4ecd4\" stroke-width=\"1.4\"/><path d=\"M316 154l13 4.5l-13 4.5z\" fill=\"#dcb44f\"/><ellipse cx=\"316\" cy=\"180\" rx=\"5\" ry=\"1.6\" fill=\"#0b2a17\"/></g>\n</svg>\n";
+const PH = {"fri": "<figure class=\"film\" style=\"--ar:540/360\"><img src=\"photos/day-fri.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"Two players on a bluff above the ocean, last year\"><figcaption>Dover 2025 \u00b7 14</figcaption></figure>", "sat": "<figure class=\"film\" style=\"--ar:1400/933\"><img src=\"photos/day-sat.jpg\" width=\"1400\" height=\"933\" loading=\"lazy\" decoding=\"async\" alt=\"Lining up a putt with the mountains behind, last year\"><figcaption>Dover 2025 \u00b7 22</figcaption></figure>", "sun": "<figure class=\"film\" style=\"--ar:540/360\"><img src=\"photos/day-sun.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"A lone golfer on the ridge, last year\"><figcaption>Dover 2025 \u00b7 31</figcaption></figure>", "last": "<h2><span class=\"frame\">2025</span>Last year</h2><p class=\"lede\">Swipe the roll.</p><figure class=\"film\" style=\"--ar:540/360\"><img src=\"photos/last-year.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"The whole group piled up at sunset, last year\"><figcaption>Dover 2025 \u00b7 36</figcaption></figure><div class=\"roll\" aria-label=\"Photos from last year\"><figure style=\"--ar:540/360\"><img src=\"photos/strip-01.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>01A</figcaption></figure><figure style=\"--ar:540/360\"><img src=\"photos/strip-02.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>02A</figcaption></figure><figure style=\"--ar:540/360\"><img src=\"photos/strip-03.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>03A</figcaption></figure><figure style=\"--ar:540/360\"><img src=\"photos/strip-04.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>04A</figcaption></figure><figure style=\"--ar:540/360\"><img src=\"photos/strip-05.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>05A</figcaption></figure><figure style=\"--ar:540/360\"><img src=\"photos/strip-06.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>06A</figcaption></figure><figure style=\"--ar:360/540\"><img src=\"photos/strip-07.jpg\" width=\"360\" height=\"540\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>07A</figcaption></figure><figure style=\"--ar:720/480\"><img src=\"photos/strip-08.jpg\" width=\"720\" height=\"480\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>08A</figcaption></figure><figure style=\"--ar:360/540\"><img src=\"photos/strip-09.jpg\" width=\"360\" height=\"540\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>09A</figcaption></figure><figure style=\"--ar:540/360\"><img src=\"photos/strip-10.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>10A</figcaption></figure><figure style=\"--ar:360/540\"><img src=\"photos/strip-11.jpg\" width=\"360\" height=\"540\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>11A</figcaption></figure><figure style=\"--ar:480/720\"><img src=\"photos/strip-12.jpg\" width=\"480\" height=\"720\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>12A</figcaption></figure></div>"};
+
+// ===== App state =====
+const LS = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+};
+const S = {
+  db: null, canWrite: false, live: false, loading: true,
+  remote: {},                       // scores from the shared store
+  local: LS.get('cc.local.v1', {}), // scores entered on this phone only (when it can't write)
+  cfgStored: null, localCfg: LS.get('cc.cfg.v1', null),
+  weather: null,
+  ui: Object.assign({ round: 'fri', group: { fri: 0, sat: 0, sun: 0 }, hole: { fri: 0, sat: 0, sun: 0 } }, LS.get('cc.ui.v1', {})),
+};
+const TEAMCLS = { jer: 'tjer', sco: 'tsco', dan: 'tdan' };
+const teamName = id => TEAMS.find(t => t.id === id).name;
+const cfg = () => mergeConfig(S.canWrite ? S.cfgStored : (S.localCfg || S.cfgStored));
+function scores() {
+  const out = {};
+  for (const [k, v] of Object.entries(S.remote)) out[k] = { ...v };
+  for (const [k, v] of Object.entries(S.local)) out[k] = { ...(out[k] || {}), ...v };
+  return out;
+}
+const fmtPts = x => (Math.round(x * 100) / 100).toString().replace(/^0\.5$/, '½').replace(/\.5$/, '½');
+const toPar = x => x === 0 ? 'E' : x > 0 ? '+' + x : '−' + Math.abs(x);
+const names = ids => ids.map(pName).join(' & ');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+// ===== Shared store (Supabase, one event) =====
+async function supabaseDb() {
+  const conf = window.DOVER_SUPABASE;
+  if (!conf || !conf.url || !conf.key) return null;
+  const load = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+  if (!window.supabase) await load('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js');
+  const sb = window.supabase.createClient(conf.url, conf.key, { auth: { persistSession: false, autoRefreshToken: false } });
+  const EV = window.DOVER_EVENT || 'dover2026';
+  const cards = {}; let config = null, loaded = false;
+  const subs = { scores: [], config: [] };
+  const snapScores = () => ({ metadata: { fromCache: false }, docs: Object.entries(cards).map(([id, d]) => ({ id, data: () => ({ ...d }) })) });
+  const emitScores = () => subs.scores.forEach(([ok]) => ok(snapScores()));
+  const emitConfig = () => subs.config.forEach(([ok]) => ok({ exists: !!config, data: () => config }));
+  const failAll = e => subs.scores.forEach(([, bad]) => bad && bad(e));
+  const apply = r => { if (r && r.event === EV && r.card) (cards[r.card] || (cards[r.card] = {}))['h' + r.hole] = r.strokes; };
+  async function refetch() {
+    const [s, c] = await Promise.all([
+      sb.from('dover_scores').select('event,card,hole,strokes').eq('event', EV).limit(5000),
+      sb.from('dover_config').select('data').eq('event', EV).maybeSingle(),
+    ]);
+    if (s.error) throw s.error;
+    for (const k in cards) delete cards[k];
+    s.data.forEach(apply); loaded = true; emitScores();
+    if (!c.error) { config = c.data ? c.data.data : null; emitConfig(); }
+  }
+  let started = false;
+  function start() {
+    if (started) return; started = true;
+    sb.channel('dover-' + EV)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'dover_scores', filter: 'event=eq.' + EV }, p => { apply(p.new); emitScores(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'dover_config', filter: 'event=eq.' + EV }, p => { if (p.new && p.new.data) { config = p.new.data; emitConfig(); } })
+      .subscribe(st => { if (st === 'SUBSCRIBED' && loaded) refetch().catch(() => {}); });
+    refetch().catch(failAll);
+    // Phones drop the live connection when they sleep: catch up when the page comes back.
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) refetch().catch(() => {}); });
+  }
+  const retry = async fn => { try { return await fn(); } catch (e) { await new Promise(r => setTimeout(r, 700)); return fn(); } };
+  const must = async q => { const { error } = await q; if (error) throw error; };
+  function saveCard(card, fields) {
+    const rows = Object.entries(fields).map(([h, v]) => ({ event: EV, card, hole: +h.slice(1), strokes: v, updated_at: new Date().toISOString() }));
+    return retry(() => must(sb.from('dover_scores').upsert(rows, { onConflict: 'event,card,hole' })));
+  }
+  return {
+    collection: name => ({ onSnapshot(ok, bad) { if (name === 'scores') { subs.scores.push([ok, bad]); if (loaded) ok(snapScores()); start(); } return () => {}; } }),
+    doc: path => {
+      const [col, id] = path.split('/');
+      if (col === 'scores') return { update: f => saveCard(id, f), set: v => saveCard(id, v), onSnapshot: () => () => {} };
+      if (path === 'trip/config') return {
+        onSnapshot(ok, bad) { subs.config.push([ok, bad]); if (loaded) ok({ exists: !!config, data: () => config }); start(); return () => {}; },
+        set: v => retry(() => must(sb.from('dover_config').upsert({ event: EV, data: v, updated_at: new Date().toISOString() }, { onConflict: 'event' }))),
+      };
+      return { onSnapshot: () => () => {}, set: async () => {}, update: async () => {} };
+    },
+  };
+}
+// ===== Shared store =====
+function setSync() {
+  const el = document.getElementById('sync');
+  if (S.live && S.canWrite) { el.className = 'sync live'; el.textContent = 'Live'; }
+  else if (S.live) { el.className = 'sync local'; el.textContent = 'View only'; }
+  else if (S.loading) { el.className = 'sync'; el.textContent = 'Connecting…'; }
+  else { el.className = 'sync local'; el.textContent = 'Saved on this phone'; }
+}
+(async function initStore() {
+  await null;
+  let db = null;
+  try { db = await supabaseDb(); } catch (e) { console.warn('Shared scores unavailable', e); db = null; }
+  if (!db) { S.loading = false; setSync(); render(); return; }
+  S.db = db;
+  S.canWrite = true;
+  const timer = setTimeout(() => { S.loading = false; setSync(); render(); }, 10000);
+  const onErr = () => { clearTimeout(timer); S.loading = false; S.live = false; setSync(); render(); };
+  db.collection('scores').onSnapshot(snap => {
+    const r = {}; snap.docs.forEach(d => { r[d.id] = d.data(); }); S.remote = r;
+    if (!snap.metadata.fromCache) { clearTimeout(timer); S.live = true; S.loading = false; }
+    setSync(); render();
+  }, onErr);
+  db.doc('trip/config').onSnapshot(d => { S.cfgStored = d.exists ? d.data() : null; render({ fromRemote: true }); }, () => {});
+  db.doc('trip/weather').onSnapshot(d => { S.weather = d.exists ? d.data() : null; if (view() === 'weather') render(); }, () => {});
+})();
+
+const queues = {};
+function saveScore(key, hole, val) {
+  const field = 'h' + (hole + 1);
+  if (!S.db || !S.canWrite) {
+    S.local[key] = { ...(S.local[key] || {}), [field]: val };
+    LS.set('cc.local.v1', S.local); render(); return;
+  }
+  S.remote = { ...S.remote, [key]: { ...(S.remote[key] || {}), [field]: val } };
+  const q = queues[key] || (queues[key] = { fields: {}, running: false });
+  q.fields[field] = val;
+  render();
+  if (!q.running) flush(key);
+}
+async function flush(key) {
+  const q = queues[key]; q.running = true;
+  while (Object.keys(q.fields).length) {
+    const f = q.fields; q.fields = {};
+    const ref = S.db.doc('scores/' + key);
+    try {
+      try { await ref.update(f); }
+      catch (e) {
+        if (e && e.code === 'invalid_argument') await ref.set({ ...(S.remote[key] || {}), ...f });
+        else if (e && e.code === 'unavailable') { await new Promise(r => setTimeout(r, 600 + Math.random() * 800)); await ref.update(f).catch(() => ref.set({ ...(S.remote[key] || {}), ...f })); }
+        else throw e;
+      }
+    } catch (e) {
+      // This viewer can't write the shared card: keep the entry on this phone instead.
+      S.canWrite = false;
+      S.local[key] = { ...(S.local[key] || {}), ...f }; LS.set('cc.local.v1', S.local);
+      setSync(); render();
+    }
+  }
+  q.running = false;
+}
+let cfgTimer = null, cfgBusy = false, cfgDirty = false;
+function saveConfig(next) {
+  if (!S.db || !S.canWrite) { S.localCfg = next; LS.set('cc.cfg.v1', next); render(); return; }
+  S.cfgStored = next; render();
+  clearTimeout(cfgTimer); cfgTimer = setTimeout(pushCfg, 500);
+}
+async function pushCfg() {
+  if (cfgBusy) { cfgDirty = true; return; }
+  cfgBusy = true;
+  try { await S.db.doc('trip/config').set(S.cfgStored); }
+  catch { S.canWrite = false; S.localCfg = S.cfgStored; LS.set('cc.cfg.v1', S.localCfg); setSync(); }
+  cfgBusy = false;
+  if (cfgDirty) { cfgDirty = false; pushCfg(); }
+}
+
+// ===== Routing =====
+const VIEWS = ['board', 'score', 'weather', 'setup'];
+const view = () => { const h = location.hash.replace('#', ''); return VIEWS.includes(h) ? h : 'board'; };
+window.addEventListener('hashchange', () => { render(); window.scrollTo(0, 0); });
+const saveUi = () => LS.set('cc.ui.v1', S.ui);
+
+// ===== Render =====
+function render(opts = {}) {
+  const v = view();
+  document.querySelectorAll('nav.tabs a').forEach(a => a.setAttribute('aria-current', a.dataset.tab === v ? 'page' : 'false'));
+  const app = document.getElementById('app');
+  if (v === 'setup' && opts.fromRemote && app.contains(document.activeElement) && document.activeElement.matches('input,select')) return;
+  const c = cfg(), sc = scores();
+  let html = '';
+  try {
+    if (v === 'board') html = renderBoard(c, sc);
+    else if (v === 'score') html = renderScore(c, sc);
+    else if (v === 'weather') html = renderWeather(c);
+    else html = renderSetup(c);
+  } catch (e) { html = `<p class="note">Something went wrong drawing this view: ${esc(e.message)}</p>`; }
+  app.innerHTML = html;
+}
+
+function matchRow(ta, tb, aIds, bIds, st, extra) {
+  const pa = TEAMCLS[ta], pb = TEAMCLS[tb];
+  let pill = '';
+  if (st.final) {
+    if (st.winner === 'H') pill = `<span class="pill">Halved</span>`;
+    else { const t = st.winner === 'A' ? ta : tb; pill = `<span class="pill win ${TEAMCLS[t]}">${teamName(t).replace('Team ', '')} wins</span>`; }
+  }
+  const leadCls = st.leader ? TEAMCLS[st.leader === 'A' ? ta : tb] : '';
+  return `<div class="row"><div class="grow">
+      <div class="who"><span class="${pa} tname"><span class="chip-dot"></span>${names(aIds)}</span><span class="vs">vs</span><span class="${pb} tname"><span class="chip-dot"></span>${names(bIds)}</span></div>
+      <div class="meta">${extra}</div></div>
+    <div><div class="status ${st.final ? 'final' : ''} ${leadCls}" style="${st.leader ? 'color:var(--tc)' : ''}">${st.final && st.winner !== 'H' ? st.text : st.text}</div><div style="text-align:right">${pill}</div></div></div>`;
+}
+function strokeNote(recvIds, alloc, holesLabel) {
+  if (!alloc.given) return 'Even, no strokes';
+  return `${names(recvIds)} ${recvIds.length > 1 ? 'get' : 'gets'} ${alloc.given} ${alloc.given === 1 ? holesLabel.replace(/s$/, '') : holesLabel}` + (alloc.capped ? ` <span class="pill cap">capped from ${alloc.wanted}</span>` : '');
+}
+
+function renderBoard(c, sc) {
+  const W = weekend(c, sc);
+  const maxT = Math.max(...TEAMS.map(t => W.tot[t.id].total));
+  const anyPts = maxT > 0;
+  const possible = c.fri.pts.reduce((a, b) => a + b, 0) + 3 * c.matchPts.win + 9 * c.matchPts.win;
+  let h = `<section class="hero"><figure class="house-print">${HOUSE}<figcaption>Dover · 2026</figcaption></figure><div class="hero-t"><div class="eyebrow">The 2026</div><div class="hero-name">Dover Invitational</div><div class="hero-sub">Sandpiper · Soule Park · Olivas</div></div></section>`;
+  h += `<div class="teams">` + TEAMS.map(t => {
+    const x = W.tot[t.id];
+    const lead = anyPts && x.total === maxT;
+    return `<div class="tcard ${TEAMCLS[t.id]} ${lead ? 'lead' : ''}"><div class="n">${t.name.replace('Team ', '')}</div>
+      <div class="pts num">${fmtPts(x.total)}</div>
+      <div class="split num">Fri ${fmtPts(x.fri)} · Sat ${fmtPts(x.sat)} · Sun ${fmtPts(x.sun)}</div>
+      ${x.live ? `<div class="proj num">${fmtPts(x.proj)} if it ended now</div>` : ''}</div>`;
+  }).join('') + `</div><div class="onLine">${fmtPts(possible)} points on the line: Friday ${fmtPts(c.fri.pts.reduce((a, b) => a + b, 0))}, Saturday 3, Sunday 9. Match wins are worth ${fmtPts(c.matchPts.win)}, halves ${fmtPts(c.matchPts.halve)}.</div>`;
+
+  // Friday
+  const F = W.F;
+  h += PH.fri;
+  h += `<h2><span class="frame">DAY 1</span>Friday at Sandpiper</h2><p class="lede">Four-man shamble. Best ${c.fri.bestN} net scores count on each hole. ${c.fri.pct}% handicaps, strokes off ${pName(F.lowId)}.</p>
+  <div class="list"><table class="std"><thead><tr><th>Pos</th><th>Team</th><th class="r">Net</th><th class="r">Thru</th><th class="r">Pts</th></tr></thead><tbody>` +
+    F.sorted.map(t => `<tr class="${TEAMCLS[t.id]}"><td class="num">${t.thru ? (t.tied ? 'T' : '') + t.pos : '–'}</td><td><span class="tname"><span class="chip-dot"></span>${t.name.replace('Team ', '')}</span></td>
+      <td class="r big num">${t.thru ? toPar(t.toPar) : '–'}</td><td class="r num">${t.thru || '–'}</td><td class="r num">${t.thru ? fmtPts(t.pts) + (F.final ? '' : '*') : '–'}</td></tr>`).join('') +
+    `</tbody></table></div>${F.final ? '' : '<p class="lede" style="margin-top:6px">* Points lock in once all three teams finish 18.</p>'}
+  <details class="strokes"><summary>Friday strokes by player</summary><div class="sgrid">` +
+    PLAYERS.map(p => { const a = F.alloc[p.id]; return `<div class="${TEAMCLS[p.team]}"><span><span class="chip-dot"></span>${p.name}</span><b class="num">${a.given}${a.capped ? '*' : ''}</b></div>`; }).join('') +
+    `</div>${PLAYERS.some(p => F.alloc[p.id].capped) ? '<p class="lede">* Capped at one stroke per hole.</p>' : ''}</details>`;
+
+  // Saturday
+  h += PH.sat;
+  h += `<h2><span class="frame">DAY 2</span>Saturday at Soule Park</h2><p class="lede">2v2 scramble match play. Side handicap is ${c.sat.low}% of the lower course handicap plus ${c.sat.high}% of the higher.</p><div class="list">` +
+    W.S.map(m => matchRow(m.ta, m.tb, m.a, m.b, m.status, `Sides ${m.A.hcp} vs ${m.B.hcp}. ` + strokeNote(m.recv === 'A' ? m.a : m.b, m.alloc, 'strokes'))).join('') + `</div>`;
+
+  // Sunday
+  h += PH.sun;
+  h += `<h2><span class="frame">DAY 3</span>Sunday at Olivas</h2><p class="lede">Front 9 best ball 2v2, back 9 singles. 9-hole handicaps at ${c.sun.pct}%, strokes off the low player in each match.</p>`;
+  W.U.forEach(g => {
+    const fr = g.front;
+    const fs = [...g.a, ...g.b].filter(id => g.fAlloc[id].given).map(id => `${pName(id)} ${g.fAlloc[id].given}${g.fAlloc[id].capped ? '*' : ''}`).join(', ') || 'no strokes';
+    h += `<div class="eyebrow" style="margin:14px 0 6px">Group ${g.gi + 1}</div><div class="list">` +
+      matchRow(g.ta, g.tb, g.a, g.b, fr.status, `Front 9 best ball. Strokes: ${fs}`) +
+      g.singles.map(s => matchRow(s.ta, s.tb, [s.a], [s.b], s.status, `Back 9 singles. ` + strokeNote(s.recv === 'A' ? [s.a] : [s.b], s.alloc, 'strokes'))).join('') + `</div>`;
+  });
+  h += `<p class="lede" style="margin-top:10px">* Capped at one stroke per hole.</p>`;
+  h += PH.last;
+  return h;
+}
+
+// ---- Score entry ----
+function entrants(c, W, round, gi) {
+  if (round === 'fri') {
+    const t = TEAMS[gi];
+    return PLAYERS.filter(p => p.team === t.id).map(p => ({ key: 'fri-' + p.id, label: p.name, team: p.team, strokes: h => W.F.alloc[p.id].perHole[h] }));
+  }
+  if (round === 'sat') {
+    const m = W.S[gi];
+    return [['A', m.a, m.ta], ['B', m.b, m.tb]].map(([s, ids, t]) => ({ key: m.key(s), label: names(ids), team: t, strokes: h => m.strokes(s, h) }));
+  }
+  const g = W.U[gi];
+  return [...g.a, ...g.b].map(id => ({
+    key: 'sun-' + id, label: pName(id), team: pTeam(id),
+    strokes: h => {
+      if (h < 9) return g.fAlloc[id].perHole[h];
+      const s = g.singles.find(x => x.a === id || x.b === id);
+      return s ? s.strokes(s.a === id ? 'A' : 'B', h) : 0;
+    },
+  }));
+}
+function groupLabels(c, W, round) {
+  if (round === 'fri') return TEAMS.map(t => t.name.replace('Team ', ''));
+  if (round === 'sat') return W.S.map(m => `${m.a.map(pName).join('/')} v ${m.b.map(pName).join('/')}`);
+  return W.U.map((g, i) => `Group ${i + 1}: ${[...g.a, ...g.b].map(pName).join(', ')}`);
+}
+function holeResult(c, W, round, gi, h, sc) {
+  if (round === 'fri') {
+    const t = W.F.teams.find(x => x.id === TEAMS[gi].id);
+    const hh = t.holes[h];
+    return `<div>${hh.team === null ? `Hole ${h + 1}: waiting on ${c.fri.bestN} scores` : `Hole ${h + 1} team net: <b>${hh.team}</b> (${toPar(hh.team - COURSES.fri.par[h] * c.fri.bestN)})`}</div>
+      <div>${t.name}: <b>${t.thru ? toPar(t.toPar) : '–'}</b> thru ${t.thru}</div>`;
+  }
+  const line = (m, aIds, bIds, ta, tb) => {
+    const r = m.res[h];
+    const who = r === 1 ? `<span class="${TEAMCLS[ta]} tname">${names(aIds)}</span> ${aIds.length > 1 ? 'win' : 'wins'} the hole` : r === -1 ? `<span class="${TEAMCLS[tb]} tname">${names(bIds)}</span> ${bIds.length > 1 ? 'win' : 'wins'} the hole` : r === 0 ? 'Hole halved' : 'Hole not complete';
+    const st = m.status;
+    const lead = st.leader ? names(st.leader === 'A' ? aIds : bIds) + ' ' : '';
+    return `<div>${who}. <b>${st.final ? (st.winner === 'H' ? 'Match halved' : names(st.winner === 'A' ? aIds : bIds) + ((st.winner === 'A' ? aIds : bIds).length > 1 ? ' win ' : ' wins ') + st.text) : lead + st.text}</b></div>`;
+  };
+  if (round === 'sat') { const m = W.S[gi]; return line(m, m.a, m.b, m.ta, m.tb); }
+  const g = W.U[gi];
+  if (h < 9) return line({ res: g.front.res, status: g.front.status }, g.a, g.b, g.ta, g.tb);
+  return g.singles.map(s => line({ res: s.res, status: s.status }, [s.a], [s.b], s.ta, s.tb)).join('');
+}
+function renderScore(c, sc) {
+  const W = weekend(c, sc);
+  const round = S.ui.round, gi = S.ui.group[round] || 0, h = S.ui.hole[round] || 0;
+  const course = COURSES[round], tee = course.tees[c.tees[round]];
+  const ents = entrants(c, W, round, gi);
+  const par = course.par[h];
+  const val = (k, hh) => { const v = sc[k] && sc[k]['h' + (hh + 1)]; return typeof v === 'number' && v > 0 ? v : null; };
+  let out = `<div class="seg" role="group" aria-label="Round">` + ['fri', 'sat', 'sun'].map(r =>
+    `<button data-act="round" data-v="${r}" aria-pressed="${r === round}">${COURSES[r].day}<small>${COURSES[r].name.replace(' Golf Club', '')}</small></button>`).join('') + `</div>`;
+  out += `<div class="groups">` + groupLabels(c, W, round).map((l, i) => `<button data-act="group" data-v="${i}" aria-pressed="${i === gi}">${esc(l)}</button>`).join('') + `</div>`;
+  const doneHole = hh => ents.every(e => val(e.key, hh) !== null);
+  out += `<section class="hole"><div class="hhead">
+      <button data-act="hole" data-v="${h - 1}" ${h === 0 ? 'disabled' : ''} aria-label="Previous hole">‹</button>
+      <div class="c"><div class="hn">Hole ${h + 1}</div><div class="hi num">Par ${par} · Hcp ${course.si[h]} · ${tee.y[h]} yds</div></div>
+      <button data-act="hole" data-v="${h + 1}" ${h === 17 ? 'disabled' : ''} aria-label="Next hole">›</button></div>
+    <div class="strip">` + ALL18.map(i => (i === 9 ? '<span class="gap"></span>' : '') + `<button data-act="hole" data-v="${i}" class="${i === h ? 'cur' : doneHole(i) ? 'done' : ''}">${i + 1}</button>`).join('') + `</div>`;
+  out += ents.map((e, ei) => {
+    const v = val(e.key, h), st = e.strokes(h);
+    const net = v === null ? null : v - st;
+    const cls = v === null ? 'empty' : v - par <= -1 ? 'birdie' : v - par >= 2 ? 'bogey2' : '';
+    return `<div class="ent ${TEAMCLS[e.team]}"><div><div class="nm"><span class="chip-dot"></span>${esc(e.label)} ${st ? `<span class="dots" title="${st} stroke">${'●'.repeat(st)}</span>` : ''}</div>
+        <div class="sm">${st ? `Gets ${st} here` : 'No stroke'}${net !== null ? ` · net ${net}` : ''} ${v !== null ? `<button class="clr" data-act="clear" data-k="${e.key}">clear</button>` : ''}</div></div>
+      <div class="step"><button data-act="dec" data-k="${e.key}" aria-label="One less for ${esc(e.label)}">−</button>
+        <div class="val num ${cls}" aria-live="polite">${v === null ? par : v}</div>
+        <button data-act="inc" data-k="${e.key}" aria-label="One more for ${esc(e.label)}">+</button></div></div>`;
+  }).join('');
+  out += `<div class="hres">${holeResult(c, W, round, gi, h, sc)}</div></section>`;
+  out += `<button class="next" data-act="${doneHole(h) ? 'hole' : 'fillpar'}" data-v="${h + 1}">${h === 17 && doneHole(h) ? 'Round complete' : doneHole(h) ? `Next: hole ${h + 2}` : `Save par for blanks${h < 17 ? ' and go to ' + (h + 2) : ''}`}</button>`;
+  out += `<p class="lede" style="margin-top:8px">Grey numbers are a par placeholder until you tap − or +. Dots show strokes received.</p>`;
+
+  // card
+  const isMatch = round !== 'fri';
+  let resCell = () => '';
+  if (round === 'fri') { const t = W.F.teams.find(x => x.id === TEAMS[gi].id); resCell = hh => t.holes[hh].team === null ? '' : t.holes[hh].team; }
+  else {
+    const g = round === 'sat' ? W.S[gi] : W.U[gi];
+    resCell = hh => {
+      const pick = round === 'sat' ? g : hh < 9 ? g.front : null;
+      const fmt = (res, ta, tb) => res[hh] === 1 ? `<span class="w ${TEAMCLS[ta]}">●</span>` : res[hh] === -1 ? `<span class="w ${TEAMCLS[tb]}">●</span>` : res[hh] === 0 ? '–' : '';
+      if (pick) return fmt(pick.res, g.ta, g.tb);
+      return g.singles.map(s => fmt(s.res, s.ta, s.tb)).join(' ');
+    };
+  }
+  const usedFri = (hh, ei) => round === 'fri' && W.F.teams.find(x => x.id === TEAMS[gi].id).holes[hh].used.includes(ei);
+  const sub = (from, to, label) => `<tr class="sub"><td>${label}</td><td>${course.par.slice(from, to).reduce((a, b) => a + b, 0)}</td>` + ents.map(e => {
+    let s = 0, n = 0; for (let i = from; i < to; i++) { const v = val(e.key, i); if (v !== null) { s += v; n++; } } return `<td>${n ? s : ''}</td>`; }).join('') + `<td></td></tr>`;
+  out += `<div class="card"><table><thead><tr><th>Hole</th><th>Par</th>${ents.map(e => `<th class="${TEAMCLS[e.team]}"><span class="tname">${esc(e.label.split(' & ').map(s => s.slice(0, 6)).join('/'))}</span></th>`).join('')}<th>${isMatch ? 'Won' : 'Team'}</th></tr></thead><tbody>` +
+    ALL18.map(i => {
+      const r = `<tr class="${i === h ? 'cur' : ''}" data-act="hole" data-v="${i}"><td>${i + 1}</td><td>${course.par[i]}</td>` + ents.map((e, ei) => {
+        const v = val(e.key, i), st = e.strokes(i);
+        return `<td class="${usedFri(i, ei) ? 'cnt' : ''}">${v === null ? '' : v}${st ? `<sup>${'•'.repeat(st)}</sup>` : ''}</td>`;
+      }).join('') + `<td>${resCell(i)}</td></tr>`;
+      return r + (i === 8 ? sub(0, 9, 'Out') : '') + (i === 17 ? sub(9, 18, 'In') + sub(0, 18, 'Total') : '');
+    }).join('') + `</tbody></table></div>`;
+  if (round === 'fri') out += `<p class="lede" style="margin-top:6px">Underlined scores counted toward the team net.</p>`;
+  return out;
+}
+
+// ---- Weather ----
+const WMO = { 0: 'Clear', 1: 'Mostly clear', 2: 'Partly cloudy', 3: 'Overcast', 45: 'Fog', 48: 'Fog', 51: 'Light drizzle', 53: 'Drizzle', 55: 'Heavy drizzle', 61: 'Light rain', 63: 'Rain', 65: 'Heavy rain', 80: 'Showers', 81: 'Showers', 82: 'Heavy showers', 95: 'Thunderstorms' };
+function renderWeather(c) {
+  const wx = S.weather || {};
+  let h = `<h2>Weather</h2><p class="lede">Each course on its day. Tap through to the National Weather Service for the latest hourly forecast.</p>`;
+  for (const r of ['fri', 'sat', 'sun']) {
+    const co = COURSES[r], t = co.tees[c.tees[r]], w = wx[r];
+    const date = new Date(co.date + 'T12:00:00');
+    const dstr = date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+    h += `<div class="wx"><div class="skyband"></div><div class="body"><div class="d"><div><div class="eyebrow">${dstr} · ${co.town}</div><h3>${co.name}</h3></div>
+      ${w && w.hi != null ? `<div class="temps num">${Math.round(w.hi)}° <span style="color:var(--muted);font-size:28px">${Math.round(w.lo)}°</span></div>` : ''}</div>
+      <div class="facts">
+        ${w && w.hi != null ? `<div><span>Sky</span>${esc(w.summary || WMO[w.code] || '–')}</div><div><span>Rain chance</span>${w.rain ?? '–'}%</div><div><span>Wind</span>${w.wind != null ? Math.round(w.wind) + ' mph' : '–'}</div>` : `<div style="grid-column:1/-1;color:var(--muted)">Forecast not added yet. The NWS link below has the current outlook.</div>`}
+        <div><span>Tees</span>${esc(c.tees[r])} · ${t.y.reduce((a, b) => a + b, 0)} yds</div><div><span>Rating / slope</span>${t.r} / ${t.s}</div><div><span>Format</span>${co.format}</div>
+      </div>
+      <p style="margin:12px 0 0"><a href="https://forecast.weather.gov/MapClick.php?lat=${co.lat}&lon=${co.lon}" target="_blank" rel="noopener">NWS forecast for ${co.name.replace(' Golf Club', '')} ↗</a></p></div></div>`;
+  }
+  if (wx.updated) h += `<p class="lede" style="margin-top:8px">Forecast added ${esc(wx.updated)}.</p>`;
+  return h;
+}
+
+// ---- Setup ----
+function renderSetup(c) {
+  const dis = (S.db && S.canWrite) ? '' : '';
+  const shared = S.db && S.canWrite;
+  let h = `<h2>Setup</h2>`;
+  h += shared ? `<p class="lede">Changes here update everyone's phones and recalculate every stroke and match.</p>`
+    : `<div class="note">This phone isn't connected to the shared scorecard right now${S.loading ? '' : ', so scores you enter save on this phone'}. You can send them from the bottom of this page.</div>`;
+  h += `<h2 style="font-size:22px">Keep score from any phone</h2><div class="note" style="margin-top:6px">Anyone with the link can enter scores, no sign-in, and every phone updates live. The tag at the top reads <b>Live</b> when a phone is connected.
+    <ol><li>Open the link in Safari or Chrome.</li><li>Tap <b>Share</b>, then <b>Add to Home Screen</b>, to get the house icon like an app.</li></ol></div>`;
+  h += `<h2 style="font-size:22px">Handicap indexes</h2><div class="list"><table class="std idx"><thead><tr><th>Player</th><th>Index</th><th class="r">Fri</th><th class="r">Sat</th><th class="r">Sun</th></tr></thead><tbody>` +
+    PLAYERS.map(p => `<tr class="${TEAMCLS[p.team]}"><td><span class="tname"><span class="chip-dot"></span>${p.name}</span>${p.id === 'sivan' ? '<div class="flag">Listed 1000 and 33; set to 36</div>' : ''}</td>
+      <td><input type="number" step="0.1" inputmode="decimal" id="idx-${p.id}" data-cfg="idx.${p.id}" value="${c.idx[p.id]}"></td>
+      ${['fri', 'sat', 'sun'].map(r => `<td class="r num">${courseHcp(c, r, p.id)}</td>`).join('')}</tr>`).join('') +
+    `</tbody></table></div><p class="lede" style="margin-top:6px">Fri/Sat/Sun columns are full course handicaps from the tees below, before format allowances.</p>`;
+  h += `<h2 style="font-size:22px">Tees</h2><div class="form">` + ['fri', 'sat', 'sun'].map(r => {
+    const co = COURSES[r];
+    return `<div class="f"><label for="tee-${r}">${co.day} · ${co.name}</label><select id="tee-${r}" data-cfg="tees.${r}">` +
+      Object.entries(co.tees).map(([n, t]) => `<option value="${esc(n)}" ${c.tees[r] === n ? 'selected' : ''}>${esc(n)} · ${t.y.reduce((a, b) => a + b, 0)} · ${t.r}/${t.s}</option>`).join('') + `</select></div>`;
+  }).join('') + `</div>`;
+  const num = (id, path, v, label, hint, step = 1) => `<div class="f"><label for="${id}">${label}${hint ? `<span class="hint">${hint}</span>` : ''}</label><input type="number" inputmode="decimal" step="${step}" id="${id}" data-cfg="${path}" value="${v}"></div>`;
+  h += `<h2 style="font-size:22px">Rules</h2><div class="form">
+    <div class="f"><label for="cap">Max one stroke per hole<span class="hint">Nobody gets more than 18 strokes over 18 holes, or 9 over 9</span></label><input type="checkbox" class="toggle" id="cap" data-cfg="capOne" ${c.capOne ? 'checked' : ''}></div>
+    ${num('fpct', 'fri.pct', c.fri.pct, 'Friday handicap %', 'Strokes off the low player')}
+    ${num('fbest', 'fri.bestN', c.fri.bestN, 'Friday scores that count per hole', 'Best net scores of the four')}
+    ${num('fp1', 'fri.pts.0', c.fri.pts[0], 'Friday points for 1st', '', 0.5)}
+    ${num('fp2', 'fri.pts.1', c.fri.pts[1], 'Friday points for 2nd', '', 0.5)}
+    ${num('fp3', 'fri.pts.2', c.fri.pts[2], 'Friday points for 3rd', '', 0.5)}
+    ${num('slow', 'sat.low', c.sat.low, 'Saturday % of lower handicap')}
+    ${num('shigh', 'sat.high', c.sat.high, 'Saturday % of higher handicap')}
+    ${num('spct', 'sun.pct', c.sun.pct, 'Sunday 9-hole handicap %', 'Applied to half the course handicap')}
+    ${num('mw', 'matchPts.win', c.matchPts.win, 'Points for a match win', '', 0.5)}
+    ${num('mh', 'matchPts.halve', c.matchPts.halve, 'Points for a halved match', '', 0.5)}
+  </div>`;
+  const groups = sunGroups(c);
+  h += `<h2 style="font-size:22px">Sunday pairings</h2><div class="form">
+    <div class="f"><label for="swap">Micah and Fasky<span class="hint">Who plays with Dan in group 1</span></label><select id="swap" data-cfg="sun.swap"><option value="0" ${!c.sun.swap ? 'selected' : ''}>Micah with Dan</option><option value="1" ${c.sun.swap ? 'selected' : ''}>Fasky with Dan</option></select></div>` +
+    groups.map((g, gi) => {
+      const sp = singlesFor(c, gi).pairs.map(([a, b]) => `${pName(a)} v ${pName(b)}`).join(', ');
+      return `<div class="f"><label for="sg${gi}">Group ${gi + 1} singles<span class="hint">${sp}</span></label><select id="sg${gi}" data-cfg="sun.singles.${gi}">
+        <option value="auto" ${c.sun.singles[gi] === 'auto' ? 'selected' : ''}>Closest handicaps</option>
+        <option value="straight" ${c.sun.singles[gi] === 'straight' ? 'selected' : ''}>${pName(g.a[0])} v ${pName(g.b[0])}</option>
+        <option value="crossed" ${c.sun.singles[gi] === 'crossed' ? 'selected' : ''}>${pName(g.a[0])} v ${pName(g.b[1])}</option></select></div>`;
+    }).join('') + `</div>`;
+  const localKeys = Object.keys(S.local).filter(k => Object.values(S.local[k]).some(v => v != null));
+  h += `<h2 style="font-size:22px">Pass scores between phones</h2><div class="form" style="padding-block:10px">
+    <p class="lede" style="margin:0 0 8px">${localKeys.length ? `This phone holds ${localKeys.length} card${localKeys.length > 1 ? 's' : ''} of its own.` : 'Nothing stored only on this phone.'} Copy the code, text it to the scorekeeper, and they paste it below.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="export" ${localKeys.length ? '' : 'disabled'}>Send my scores</button></div>
+    <textarea id="code-out" readonly ${S.exportCode ? '' : 'hidden'} aria-label="Score code">${S.exportCode || ''}</textarea>
+    <label for="code-in" class="eyebrow" style="display:block;margin-top:12px">Paste a code from another phone</label>
+    <textarea id="code-in" placeholder="CTC1:…"></textarea>
+    <div style="display:flex;gap:8px;align-items:center;margin-top:8px"><button class="btn pri" data-act="import">Add these scores</button><span class="lede" style="margin:0" id="imp-msg">${S.importMsg || ''}</span></div>
+  </div>`;
+  h += `<p class="lede" style="margin-top:14px">Course handicap = index × slope ÷ 113 + (rating − par), rounded. Scorecards from Greenskeeper (Sandpiper) and GolfPass (Soule Park, Olivas).</p>`;
+  return h;
+}
+
+// ===== Events =====
+document.addEventListener('click', ev => {
+  const el = ev.target.closest('[data-act]'); if (!el) return;
+  const act = el.dataset.act, c = cfg(), round = S.ui.round;
+  if (act === 'round') { S.ui.round = el.dataset.v; saveUi(); render(); return; }
+  if (act === 'group') { S.ui.group[round] = +el.dataset.v; saveUi(); render(); return; }
+  if (act === 'hole') { const v = Math.max(0, Math.min(17, +el.dataset.v)); S.ui.hole[round] = v; saveUi(); render(); if (el.closest('.card')) document.querySelector('.hole')?.scrollIntoView({ block: 'start', behavior: 'smooth' }); return; }
+  const h = S.ui.hole[round] || 0, par = COURSES[round].par[h], sc = scores();
+  const cur = k => { const v = sc[k] && sc[k]['h' + (h + 1)]; return typeof v === 'number' && v > 0 ? v : null; };
+  if (act === 'inc' || act === 'dec') {
+    const k = el.dataset.k, v = cur(k);
+    let n = v === null ? par + (act === 'inc' ? 0 : -1) : v + (act === 'inc' ? 1 : -1);
+    if (v === null && act === 'inc') n = par;
+    n = Math.max(1, Math.min(15, n));
+    saveScore(k, h, n); return;
+  }
+  if (act === 'clear') { saveScore(el.dataset.k, h, null); return; }
+  if (act === 'fillpar') {
+    const W = weekend(c, sc);
+    entrants(c, W, round, S.ui.group[round] || 0).forEach(e => { if (cur(e.key) === null) saveScore(e.key, h, par); });
+    if (h < 17) { S.ui.hole[round] = h + 1; saveUi(); render(); }
+    return;
+  }
+  if (act === 'export') {
+    S.exportCode = 'CTC1:' + btoa(unescape(encodeURIComponent(JSON.stringify(S.local))));
+    render();
+    const ta = document.getElementById('code-out');
+    navigator.clipboard?.writeText(S.exportCode).then(() => { S.importMsg = 'Code copied'; render(); }).catch(() => { ta?.select(); });
+    return;
+  }
+  if (act === 'import') {
+    const raw = (document.getElementById('code-in').value || '').trim();
+    try {
+      if (!raw.startsWith('CTC1:')) throw new Error('bad');
+      const data = JSON.parse(decodeURIComponent(escape(atob(raw.slice(5)))));
+      let n = 0;
+      for (const [k, fields] of Object.entries(data)) {
+        if (!/^(fri|sun)-[a-z]+$|^sat-m[0-2]-[ab]$/.test(k) || typeof fields !== 'object') continue;
+        for (const [f, v] of Object.entries(fields)) {
+          const m = /^h(\d{1,2})$/.exec(f); if (!m || +m[1] < 1 || +m[1] > 18) continue;
+          if (v === null || (Number.isInteger(v) && v > 0 && v < 20)) { saveScore(k, +m[1] - 1, v); n++; }
+        }
+      }
+      S.importMsg = n ? `Added ${n} hole scores` : 'That code had no scores in it';
+    } catch { S.importMsg = 'That code didn’t read. Copy it again in full.'; }
+    render(); return;
+  }
+});
+document.addEventListener('change', ev => {
+  const el = ev.target; if (!el.dataset || !el.dataset.cfg) return;
+  const c = cfg(); const next = JSON.parse(JSON.stringify(c));
+  const path = el.dataset.cfg.split('.');
+  let v;
+  if (el.type === 'checkbox') v = el.checked;
+  else if (el.id === 'swap') v = el.value === '1';
+  else if (el.type === 'number') { v = parseFloat(el.value); if (!isFinite(v)) { render(); return; } }
+  else v = el.value;
+  let o = next; for (let i = 0; i < path.length - 1; i++) o = o[path[i]];
+  const last = path[path.length - 1];
+  if (Array.isArray(o)) o[+last] = v; else o[last] = v;
+  if (next.fri.bestN < 1) next.fri.bestN = 1; if (next.fri.bestN > 4) next.fri.bestN = 4;
+  saveConfig(next);
+});
+
+render(); setSync();
+</script>
+</body>
+</html>
