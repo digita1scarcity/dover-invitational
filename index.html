@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow,noarchive">
-<meta name="theme-color" content="#f4efe3">
+<meta name="theme-color" content="#0f3b2b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Dover">
@@ -14,34 +14,34 @@
 <link rel="manifest" href="manifest.webmanifest">
 <script src="supabase-config.js?v=2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Display&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Archivo+Narrow:wght@500;600;700&display=swap">
 <style>
-/* Layout: prints on photo paper. Warm paper sheet, each section a print on it, film-edge strip for holes, fixed bottom tab bar.
-   Single light look by choice, tuned for high contrast in sun. */
+/* Clubhouse look: the clubhouse at a major. Engraved serif masthead, a hand-hung green leaderboard,
+   cream paper, red for under par, gold hairlines. Single light look by choice, high contrast in sun. */
 :root {
   color-scheme: light;
-  --bg: #f4efe3;        /* photo paper */
-  --surface: #fffcf5;   /* a print */
-  --sunk: #ece5d4;
-  --ink: #1d2620;
-  --muted: #6b6758;
-  --line: #e0d7c3;
-  --edge: #cfc4ac;      /* control borders */
-  --sky: #2c6fb7;
-  --sky-deep: #1f5a9a;
-  --fair: #2f7a3b;      /* fairway */
-  --fair-deep: #10512c;
-  --fair-ink: #ffffff;
-  --flag: #946610;      /* flag gold, darkened to read on paper */
-  --stamp: #d9731c;     /* film date stamp */
-  --t-jer: #2364ad;     /* blue polo */
-  --t-sco: #c13c27;     /* red polo */
-  --t-dan: #8a6a2c;     /* khaki */
-  --good: #2e7d32; --bad: #c0392b;
-  --f-display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
-  --f-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
-  --r: 3px;
+  --bg: #f6f1e4;        /* clubhouse cream */
+  --surface: #fffdf7;
+  --sunk: #efe8d6;
+  --ink: #1a1a17;
+  --muted: #6a675b;
+  --line: #ddd4bd;
+  --edge: #cbbf9f;
+  --green: #0f3b2b;     /* board green */
+  --green-2: #0a2a1e;
+  --green-ink: #e9e3cf;
+  --gold: #a8853a;      /* hairlines */
+  --red: #c0102c;       /* under par */
+  --sky: var(--green); --sky-deep: var(--green-2);
+  --fair: var(--green); --fair-deep: var(--green-2); --fair-ink: #ffffff;
+  --flag: #82641f;      /* gold, darkened for text */
+  --stamp: var(--red);
+  --t-jer: #1f4e8c; --t-sco: #9e2a22; --t-dan: #7a6326;
+  --good: var(--red); --bad: #3f4f45;
+  --f-display: "Libre Caslon Display", "Libre Caslon Text", Georgia, "Times New Roman", serif;
+  --f-body: "Libre Caslon Text", Georgia, "Times New Roman", serif;
+  --f-mono: "Archivo Narrow", "Arial Narrow", "Helvetica Neue", sans-serif;
+  --r: 0px;
 }
 :root { padding-top: env(safe-area-inset-top, 0px) }
 [hidden] { display: none !important }
@@ -216,6 +216,102 @@ nav.tabs a[aria-current="page"] { color: var(--flag) }
 nav.tabs a[aria-current="page"] .ic { color: var(--flag) }
 .empty-msg { color: var(--muted); font-size: 14px; padding: 14px 12px }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important } }
+
+/* ===== Clubhouse overrides ===== */
+body::before { background: var(--green) }
+header.top { background: var(--bg); border-bottom: 1px solid var(--line); box-shadow: 0 1px 0 var(--bg), 0 3px 0 -1px var(--gold) }
+header.top h1 { font-family: var(--f-display); font-style: normal; font-size: 19px; letter-spacing: .08em; text-transform: uppercase; color: var(--green); line-height: 1.05 }
+header.top .sub { font-family: var(--f-mono); font-weight: 600; letter-spacing: .2em; color: var(--flag) }
+.house-ic { box-shadow: none; border: 1px solid var(--line); border-radius: 0 }
+.sync { font-family: var(--f-mono); font-weight: 600; letter-spacing: .14em }
+.sync.live { color: var(--green); border-color: color-mix(in srgb, var(--green) 35%, transparent) }
+.ribbon { background: var(--green); color: var(--green-ink); font-family: var(--f-mono); font-weight: 600; font-size: 11px; letter-spacing: .22em; text-transform: uppercase; text-align: center; padding: 8px 12px; margin: 0 calc(-1 * max(16px, env(safe-area-inset-right, 0px))) 0 calc(-1 * max(16px, env(safe-area-inset-left, 0px))) }
+.hero { padding: 0 0 6px; border-bottom: 0; text-align: center }
+.mast { padding: 22px 0 4px }
+.mast .the { font-style: italic; font-size: 17px; color: var(--muted) }
+.mast .nm { font-family: var(--f-display); font-size: clamp(34px, 10vw, 56px); line-height: .95; letter-spacing: .06em; color: var(--green); margin: 2px 0 0; text-wrap: balance }
+.mast .yr { display: flex; align-items: center; gap: 12px; justify-content: center; margin-top: 12px; font-family: var(--f-mono); font-weight: 600; letter-spacing: .3em; font-size: 12px; color: var(--flag) }
+.mast .yr::before, .mast .yr::after { content: ""; height: 1px; width: 56px; background: var(--gold) }
+.arch { margin: 16px auto 4px; max-width: 460px; border-radius: 230px 230px 0 0; overflow: hidden; border: 1px solid var(--gold); outline: 6px solid var(--surface); outline-offset: -7px; background: #fff; padding: 22px 14px 10px }
+.arch .house-art { display: block; width: 100%; height: auto }
+.motto { font-style: italic; color: var(--muted); font-size: 14px; margin: 10px 0 0 }
+/* the hand-hung board */
+.board { background: var(--green); padding: 10px 10px 12px; border: 3px solid var(--green-2); box-shadow: inset 0 0 0 1px #2c5a46, 0 10px 24px rgb(15 40 25 / .18); margin-top: 18px }
+.board .btitle { text-align: center; font-family: var(--f-mono); font-weight: 700; color: #fff; letter-spacing: .5em; text-indent: .5em; font-size: 22px; padding: 4px 0 10px }
+.board table { width: 100%; border-collapse: separate; border-spacing: 3px; table-layout: fixed }
+.board col.c-pos { width: 13% } .board col.c-nm { width: 35% }
+.board th { font-family: var(--f-mono); font-weight: 600; color: var(--green-ink); font-size: 10.5px; letter-spacing: .14em; padding: 2px 0 4px; text-align: center }
+.board th.nm { text-align: left; padding-left: 10px }
+.board td { background: #fbfaf5; font-family: var(--f-mono); font-weight: 700; font-size: 20px; text-align: center; padding: 7px 2px; color: var(--ink); box-shadow: inset 0 -2px 0 rgb(0 0 0 / .07) }
+.board td.nm { text-align: left; padding-left: 10px; letter-spacing: .05em; text-transform: uppercase; font-size: 18px; color: var(--tc); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.board td.tot { color: var(--red); font-size: 24px }
+.board td.tot.zero { color: var(--ink) }
+.board .bfoot { text-align: center; color: var(--green-ink); font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .08em; margin-top: 8px; line-height: 1.5 }
+.board .bfoot b { color: #fff; font-weight: 600 }
+.onLine { text-align: center; font-style: italic }
+/* headings */
+h2 { font-family: var(--f-display); color: var(--green); font-size: 28px; line-height: 1.1; margin: 36px 0 4px }
+h2 .frame { display: block; font-family: var(--f-mono); font-weight: 600; font-size: 11px; letter-spacing: .24em; color: var(--flag); vertical-align: 0; margin: 0 0 4px }
+h3 { font-family: var(--f-display) }
+.lede { font-style: italic; font-size: 13.5px }
+.eyebrow { font-family: var(--f-mono); font-weight: 600; letter-spacing: .2em; color: var(--flag) }
+/* paper cards */
+.list, .form, .card, .hole, .wx { border: 1px solid var(--line); border-radius: 0 }
+table.std th { font-family: var(--f-mono); font-weight: 600; letter-spacing: .16em; border-bottom: 2px solid var(--green) }
+.big { font-family: var(--f-mono); font-weight: 700; font-size: 20px }
+.under { color: var(--red) }
+.status { font-family: var(--f-mono); font-weight: 700; font-size: 16px; letter-spacing: .03em; background: var(--green); color: #fff !important; padding: 6px 10px; text-align: center; min-width: 78px }
+.status.final { background: var(--surface); color: var(--green) !important; box-shadow: inset 0 0 0 1px var(--line) }
+.row .vs { font-family: var(--f-body) }
+.pill { font-family: var(--f-mono); font-weight: 600; letter-spacing: .12em; border-radius: 0 }
+.tname { font-weight: 700 }
+details.strokes summary { color: var(--green) }
+/* score entry */
+.seg button { font-family: var(--f-display); color: var(--green) }
+.seg button[aria-pressed="true"] { background: var(--green); color: #fff; border-color: var(--green) }
+.seg small { font-family: var(--f-mono); font-weight: 600 }
+.groups button { border-radius: 0; font-family: var(--f-mono); font-weight: 600; letter-spacing: .04em; font-size: 14px }
+.hhead { background: var(--green); border-bottom: 2px solid var(--gold); box-shadow: inset 0 0 0 1px #2c5a46 }
+.hhead .hn { font-family: var(--f-display); text-shadow: none }
+.hhead .hi { font-family: var(--f-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--green-ink); text-shadow: none }
+.hhead button { text-shadow: none; color: var(--green-ink) }
+.strip { background: var(--sunk); background-image: none; padding: 10px; border-bottom: 1px solid var(--line) }
+.strip button { font-family: var(--f-mono); font-weight: 700; font-size: 14px }
+.strip button.done { color: var(--green) }
+.strip button.cur { background: var(--green); color: #fff }
+.ent .nm { font-family: var(--f-body); font-weight: 700 }
+.step button { border-radius: 0; font-family: var(--f-mono) }
+.step .val { font-family: var(--f-mono); font-weight: 700; font-size: 34px }
+.dots { color: var(--gold) }
+.hres { font-family: var(--f-body) }
+.next { border-radius: 0; font-family: var(--f-mono); letter-spacing: .14em; text-transform: uppercase; font-size: 15px; box-shadow: inset 0 -2px 0 var(--gold) }
+/* scorecard */
+.card table { font-family: var(--f-mono); font-size: 14px }
+.card th { background: var(--green); color: #fff; font-family: var(--f-mono); font-weight: 700; letter-spacing: .06em; font-size: 12px }
+.card th .tname { color: #fff }
+.card td { border: 1px solid #dfe5dc }
+.card tr.sub td { background: #eef3ee; color: var(--green) }
+.card tr.cur td { background: color-mix(in srgb, var(--gold) 18%, transparent) }
+.card td sup { color: var(--gold) }
+.card td.cnt { text-decoration-color: var(--green); text-decoration-thickness: 2px }
+.card .s { display: inline-grid; place-items: center; min-width: 22px; height: 22px; font-weight: 600 }
+.card .s.bird { border: 1.5px solid var(--red); border-radius: 50%; color: var(--red) }
+.card .s.bog { border: 1.5px solid #7c8a80 }
+.card td.cnt .s { text-decoration: underline; text-decoration-color: var(--green); text-decoration-thickness: 2px; text-underline-offset: 3px }
+/* setup + misc */
+.note { border-left-color: var(--gold); background: color-mix(in srgb, var(--gold) 9%, var(--surface)) }
+.btn { border-radius: 0; font-family: var(--f-mono); letter-spacing: .06em }
+.wx .skyband { height: 6px; background: var(--green); box-shadow: inset 0 -2px 0 var(--gold) }
+.wx .temps { font-family: var(--f-mono); font-weight: 700; color: var(--green) }
+.wx .facts span { font-family: var(--f-mono); font-weight: 600 }
+.wx a, .lede a, .note a { color: var(--green) }
+/* tab bar */
+nav.tabs { background: var(--green); border-top: 2px solid var(--gold) }
+nav.tabs a { color: var(--green-ink); font-family: var(--f-mono); font-weight: 600; letter-spacing: .18em }
+nav.tabs a .ic { font-family: var(--f-display); font-style: normal; color: var(--green-ink) }
+nav.tabs a[aria-current="page"], nav.tabs a[aria-current="page"] .ic { color: #fff }
+nav.tabs a[aria-current="page"] { box-shadow: inset 0 -2px 0 var(--gold) }
+:focus-visible { outline-color: var(--gold) }
 </style>
 
 </head>
@@ -554,7 +650,7 @@ if (typeof module !== 'undefined') module.exports = { COURSES, PLAYERS, TEAMS, D
 
 // ===== Art and photos =====
 let HOUSE = "<img class=\"house-art\" src=\"photos/house.jpg\" width=\"1080\" height=\"655\" alt=\"The Dover beach house on the dunes\">";
-const PH = {"boardTop": "<figure class=\"film wide\" style=\"--ar:540/360\"><img src=\"photos/last-year.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"The whole group piled up at sunset, last year\"><figcaption>Dover 2025 \u00b7 36</figcaption></figure>", "boardFri": "<div class=\"pair\"><figure class=\"film\" style=\"--ar:540/360\"><img src=\"photos/strip-01.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>Dover 2025 \u00b7 03</figcaption></figure><figure class=\"film\" style=\"--ar:540/360\"><img src=\"photos/strip-02.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>Dover 2025 \u00b7 07</figcaption></figure></div>", "boardSat": "<div class=\"pair\"><figure class=\"film\" style=\"--ar:360/540\"><img src=\"photos/strip-07.jpg\" width=\"360\" height=\"540\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>Dover 2025 \u00b7 11</figcaption></figure><figure class=\"film\" style=\"--ar:360/540\"><img src=\"photos/strip-09.jpg\" width=\"360\" height=\"540\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>Dover 2025 \u00b7 15</figcaption></figure></div>", "boardEnd": "<figure class=\"film wide\" style=\"--ar:720/480\"><img src=\"photos/strip-08.jpg\" width=\"720\" height=\"480\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>Dover 2025 \u00b7 19</figcaption></figure><div class=\"pair\"><figure class=\"film\" style=\"--ar:540/360\"><img src=\"photos/strip-03.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>Dover 2025 \u00b7 24</figcaption></figure><figure class=\"film\" style=\"--ar:540/360\"><img src=\"photos/strip-04.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>Dover 2025 \u00b7 27</figcaption></figure></div>", "wx_fri": "<img class=\"wx-photo\" style=\"--ar:540/360\" src=\"photos/day-fri.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"Two players on a bluff above the ocean, last year\">", "wx_sat": "<img class=\"wx-photo\" style=\"--ar:1400/933\" src=\"photos/day-sat.jpg\" width=\"1400\" height=\"933\" loading=\"lazy\" decoding=\"async\" alt=\"Lining up a putt with the mountains behind, last year\">", "wx_sun": "<img class=\"wx-photo\" style=\"--ar:540/360\" src=\"photos/day-sun.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"A lone golfer on the ridge, last year\">", "score": "<figure class=\"film wide\" style=\"--ar:540/360\"><img src=\"photos/strip-10.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>Dover 2025 \u00b7 30</figcaption></figure>", "setupTop": "<div class=\"pair\"><figure class=\"film\" style=\"--ar:360/540\"><img src=\"photos/strip-11.jpg\" width=\"360\" height=\"540\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>Dover 2025 \u00b7 33</figcaption></figure><figure class=\"film\" style=\"--ar:480/720\"><img src=\"photos/strip-12.jpg\" width=\"480\" height=\"720\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>Dover 2025 \u00b7 34</figcaption></figure></div>", "setupEnd": "<div class=\"pair\"><figure class=\"film\" style=\"--ar:540/360\"><img src=\"photos/strip-05.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>Dover 2025 \u00b7 01</figcaption></figure><figure class=\"film\" style=\"--ar:540/360\"><img src=\"photos/strip-06.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>Dover 2025 \u00b7 05</figcaption></figure></div>"};
+const PH = {"boardTop": "", "boardFri": "", "boardSat": "", "boardEnd": "", "wx_fri": "<div class=\"skyband\"></div>", "wx_sat": "<div class=\"skyband\"></div>", "wx_sun": "<div class=\"skyband\"></div>", "score": "", "setupTop": "", "setupEnd": ""};
 
 // ===== App state =====
 const LS = {
@@ -759,23 +855,24 @@ function renderBoard(c, sc) {
   const maxT = Math.max(...TEAMS.map(t => W.tot[t.id].total));
   const anyPts = maxT > 0;
   const possible = c.fri.pts.reduce((a, b) => a + b, 0) + 3 * c.matchPts.win + 9 * c.matchPts.win;
-  let h = `<section class="hero"><figure class="house-print">${HOUSE}<figcaption>Dover · 2026</figcaption></figure><div class="hero-t"><div class="eyebrow">The 2026</div><div class="hero-name">Dover Invitational</div><div class="hero-sub">Sandpiper · Soule Park · Olivas</div></div></section>`;
-  h += `<div class="teams">` + TEAMS.map(t => {
-    const x = W.tot[t.id];
-    const lead = anyPts && x.total === maxT;
-    return `<div class="tcard ${TEAMCLS[t.id]} ${lead ? 'lead' : ''}"><div class="n">${t.name.replace('Team ', '')}</div>
-      <div class="pts num">${fmtPts(x.total)}</div>
-      <div class="split num">Fri ${fmtPts(x.fri)} · Sat ${fmtPts(x.sat)} · Sun ${fmtPts(x.sun)}</div>
-      ${x.live ? `<div class="proj num">${fmtPts(x.proj)} if it ended now</div>` : ''}</div>`;
-  }).join('') + `</div><div class="onLine">${fmtPts(possible)} points on the line: Friday ${fmtPts(c.fri.pts.reduce((a, b) => a + b, 0))}, Saturday 3, Sunday 9. Match wins are worth ${fmtPts(c.matchPts.win)}, halves ${fmtPts(c.matchPts.halve)}.</div>`;
+  let h = `<div class="ribbon">November 20–22 · Goleta · Ojai · Ventura</div><section class="hero"><div class="mast"><div class="the">The</div><div class="nm" role="heading" aria-level="1">DOVER<br>INVITATIONAL</div><div class="yr">MMXXVI</div></div><div class="arch">${HOUSE}</div><p class="motto">Fifty-four holes. Three courses. Twelve players.</p></section>`;
+  const ranked = [...TEAMS].sort((a, b) => W.tot[b.id].total - W.tot[a.id].total);
+  const posOf = id => { const v = W.tot[id].total; const ahead = TEAMS.filter(x => W.tot[x.id].total > v).length; const tied = TEAMS.filter(x => W.tot[x.id].total === v).length > 1; return (tied ? 'T' : '') + (ahead + 1); };
+  const dayCell = (x, d) => anyPts ? fmtPts(x[d]) : '–';
+  const anyLive = TEAMS.some(t => W.tot[t.id].live);
+  h += `<div class="board" role="region" aria-label="Leaderboard"><div class="btitle">LEADERS</div><table><colgroup><col class="c-pos"><col class="c-nm"><col><col><col><col></colgroup>
+    <thead><tr><th>POS</th><th class="nm">TEAM</th><th>FRI</th><th>SAT</th><th>SUN</th><th>TOT</th></tr></thead><tbody>` +
+    ranked.map(t => { const x = W.tot[t.id]; return `<tr class="${TEAMCLS[t.id]}"><td>${anyPts ? posOf(t.id) : '–'}</td><td class="nm">${t.name.replace('Team ', '')}</td><td>${dayCell(x, 'fri')}</td><td>${dayCell(x, 'sat')}</td><td>${dayCell(x, 'sun')}</td><td class="tot ${x.total ? '' : 'zero'}">${fmtPts(x.total)}</td></tr>`; }).join('') +
+    `</tbody></table><div class="bfoot">` + (anyLive ? `If it ended now: ` + ranked.map(t => `<b>${t.name.replace('Team ', '')} ${fmtPts(W.tot[t.id].proj)}</b>`).join(' · ') + `<br>` : '') +
+    `${fmtPts(possible)} points on the line</div></div><div class="onLine">Friday ${fmtPts(c.fri.pts.reduce((a, b) => a + b, 0))}, Saturday 3, Sunday 9. Match wins are worth ${fmtPts(c.matchPts.win)}, halves ${fmtPts(c.matchPts.halve)}.</div>`;
 
   h += PH.boardTop;
   // Friday
   const F = W.F;
-  h += `<h2><span class="frame">DAY 1</span>Friday at Sandpiper</h2><p class="lede">Four-man shamble. Best ${c.fri.bestN} net scores count on each hole. ${c.fri.pct}% handicaps, strokes off ${pName(F.lowId)}.</p>
+  h += `<h2><span class="frame">FIRST ROUND · FRIDAY</span>Sandpiper</h2><p class="lede">Four-man shamble. Best ${c.fri.bestN} net scores count on each hole. ${c.fri.pct}% handicaps, strokes off ${pName(F.lowId)}.</p>
   <div class="list"><table class="std"><thead><tr><th>Pos</th><th>Team</th><th class="r">Net</th><th class="r">Thru</th><th class="r">Pts</th></tr></thead><tbody>` +
     F.sorted.map(t => `<tr class="${TEAMCLS[t.id]}"><td class="num">${t.thru ? (t.tied ? 'T' : '') + t.pos : '–'}</td><td><span class="tname"><span class="chip-dot"></span>${t.name.replace('Team ', '')}</span></td>
-      <td class="r big num">${t.thru ? toPar(t.toPar) : '–'}</td><td class="r num">${t.thru || '–'}</td><td class="r num">${t.thru ? fmtPts(t.pts) + (F.final ? '' : '*') : '–'}</td></tr>`).join('') +
+      <td class="r big num ${t.thru && t.toPar < 0 ? 'under' : ''}">${t.thru ? toPar(t.toPar) : '–'}</td><td class="r num">${t.thru || '–'}</td><td class="r num">${t.thru ? fmtPts(t.pts) + (F.final ? '' : '*') : '–'}</td></tr>`).join('') +
     `</tbody></table></div>${F.final ? '' : '<p class="lede" style="margin-top:6px">* Points lock in once all three teams finish 18.</p>'}
   <details class="strokes"><summary>Friday strokes by player</summary><div class="sgrid">` +
     PLAYERS.map(p => { const a = F.alloc[p.id]; return `<div class="${TEAMCLS[p.team]}"><span><span class="chip-dot"></span>${p.name}</span><b class="num">${a.given}${a.capped ? '*' : ''}</b></div>`; }).join('') +
@@ -783,12 +880,12 @@ function renderBoard(c, sc) {
 
   // Saturday
   h += PH.boardFri;
-  h += `<h2><span class="frame">DAY 2</span>Saturday at Soule Park</h2><p class="lede">2v2 scramble match play. Side handicap is ${c.sat.low}% of the lower course handicap plus ${c.sat.high}% of the higher.</p><div class="list">` +
+  h += `<h2><span class="frame">SECOND ROUND · SATURDAY</span>Soule Park</h2><p class="lede">2v2 scramble match play. Side handicap is ${c.sat.low}% of the lower course handicap plus ${c.sat.high}% of the higher.</p><div class="list">` +
     W.S.map(m => matchRow(m.ta, m.tb, m.a, m.b, m.status, `Sides ${m.A.hcp} vs ${m.B.hcp}. ` + strokeNote(m.recv === 'A' ? m.a : m.b, m.alloc, 'strokes'))).join('') + `</div>`;
 
   // Sunday
   h += PH.boardSat;
-  h += `<h2><span class="frame">DAY 3</span>Sunday at Olivas</h2><p class="lede">Front 9 best ball 2v2, back 9 singles. 9-hole handicaps at ${c.sun.pct}%, strokes off the low player in each match.</p>`;
+  h += `<h2><span class="frame">FINAL ROUND · SUNDAY</span>Olivas Links</h2><p class="lede">Front 9 best ball 2v2, back 9 singles. 9-hole handicaps at ${c.sun.pct}%, strokes off the low player in each match.</p>`;
   W.U.forEach(g => {
     const fr = g.front;
     const fs = [...g.a, ...g.b].filter(id => g.fAlloc[id].given).map(id => `${pName(id)} ${g.fAlloc[id].given}${g.fAlloc[id].capped ? '*' : ''}`).join(', ') || 'no strokes';
@@ -895,11 +992,11 @@ function renderScore(c, sc) {
     ALL18.map(i => {
       const r = `<tr class="${i === h ? 'cur' : ''}" data-act="hole" data-v="${i}"><td>${i + 1}</td><td>${course.par[i]}</td>` + ents.map((e, ei) => {
         const v = val(e.key, i), st = e.strokes(i);
-        return `<td class="${usedFri(i, ei) ? 'cnt' : ''}">${v === null ? '' : v}${st ? `<sup>${'•'.repeat(st)}</sup>` : ''}</td>`;
+        return `<td class="${usedFri(i, ei) ? 'cnt' : ''}">${v === null ? '' : `<span class="s ${v < course.par[i] ? 'bird' : v > course.par[i] ? 'bog' : ''}">${v}</span>`}${st ? `<sup>${'•'.repeat(st)}</sup>` : ''}</td>`;
       }).join('') + `<td>${resCell(i)}</td></tr>`;
       return r + (i === 8 ? sub(0, 9, 'Out') : '') + (i === 17 ? sub(9, 18, 'In') + sub(0, 18, 'Total') : '');
     }).join('') + `</tbody></table></div>`;
-  if (round === 'fri') out += `<p class="lede" style="margin-top:6px">Underlined scores counted toward the team net.</p>`;
+  if (round === 'fri') out += `<p class="lede" style="margin-top:6px">Underlined scores counted toward the team net. Red rings are birdies, boxes are bogeys or worse.</p>`;
   out += PH.score;
   return out;
 }
