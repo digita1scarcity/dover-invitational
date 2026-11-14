@@ -4,38 +4,40 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow,noarchive">
-<meta name="theme-color" content="#151916">
+<meta name="theme-color" content="#f4efe3">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Dover">
 <title>Dover Invitational</title>
-<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.png" type="image/png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
 <script src="supabase-config.js?v=2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap">
 <style>
-/* Layout: a contact sheet. Charcoal sheet, each section a "print" on it, film-edge strip for holes, fixed bottom tab bar.
-   Single dark look by choice (last year's contact sheets), tuned for high contrast in sun. */
+/* Layout: prints on photo paper. Warm paper sheet, each section a print on it, film-edge strip for holes, fixed bottom tab bar.
+   Single light look by choice, tuned for high contrast in sun. */
 :root {
-  color-scheme: dark;
-  --bg: #151916;        /* contact-sheet charcoal, leaning to the badge's green */
-  --surface: #20251f;   /* a print's frame */
-  --sunk: #2a3029;
-  --ink: #f4eedb;       /* badge cream */
-  --muted: #b5af9b;
-  --line: #353c35;
-  --sky: #5ca9e3;       /* the badge's ocean */
-  --sky-deep: #3a86cf;
-  --fair: #6cb35a;      /* fairway */
-  --fair-deep: #10512c; /* badge enamel green */
-  --fair-ink: #0b1608;
-  --flag: #dcb44f;      /* badge gold */
-  --t-jer: #7cb6f5;     /* blue polo */
-  --t-sco: #f0604a;     /* red polo */
-  --t-dan: #dcc38f;     /* khaki */
-  --good: #8fcf68; --bad: #f27b67;
+  color-scheme: light;
+  --bg: #f4efe3;        /* photo paper */
+  --surface: #fffcf5;   /* a print */
+  --sunk: #ece5d4;
+  --ink: #1d2620;
+  --muted: #6b6758;
+  --line: #e0d7c3;
+  --edge: #cfc4ac;      /* control borders */
+  --sky: #2c6fb7;
+  --sky-deep: #1f5a9a;
+  --fair: #2f7a3b;      /* fairway */
+  --fair-deep: #10512c;
+  --fair-ink: #ffffff;
+  --flag: #946610;      /* flag gold, darkened to read on paper */
+  --stamp: #d9731c;     /* film date stamp */
+  --t-jer: #2364ad;     /* blue polo */
+  --t-sco: #c13c27;     /* red polo */
+  --t-dan: #8a6a2c;     /* khaki */
+  --good: #2e7d32; --bad: #c0392b;
   --f-display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
   --f-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
@@ -72,28 +74,26 @@ h3 { font-family: var(--f-display); font-weight: 400; font-size: 24px; margin: 0
 .tname { color: var(--tc); font-weight: 600 }
 .chip-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--tc); margin-right: 6px; vertical-align: 1px }
 /* the Dover house, out of the badge */
-.house-ic { width: 52px; height: auto; flex: 0 0 auto; margin-bottom: 2px }
+.house-ic { height: 40px; width: auto; flex: 0 0 auto; background: #fff; padding: 2px; border-radius: 2px; box-shadow: 0 1px 2px rgb(60 48 24 / .25); margin-bottom: 2px }
 .hero { padding: 16px 0 8px; border-bottom: 1px solid var(--line) }
-.house-print { margin: 0 0 14px; background: #0d0d0c; padding: 6px 6px 20px; border-radius: 2px; position: relative }
-.house-art { display: block; width: 100%; height: auto }
-.house-print figcaption, .film figcaption { position: absolute; left: 9px; bottom: 4px; font-family: var(--f-mono); font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; color: #e5a03a }
+.house-print { margin: 0 0 14px; background: #fff; padding: 8px 8px 22px; border-radius: 2px; position: relative; box-shadow: 0 1px 2px rgb(60 48 24 / .18), 0 8px 20px rgb(60 48 24 / .10) }
+.house-art { display: block; width: 100%; height: auto; aspect-ratio: 1080/655 }
+.house-print figcaption, .film figcaption { position: absolute; left: 10px; bottom: 5px; font-family: var(--f-mono); font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--stamp) }
 .hero-t { min-width: 0 }
 .hero-t .eyebrow { color: var(--flag) }
 .hero-name { font-family: var(--f-display); font-size: clamp(34px, 9vw, 48px); line-height: .95; margin: 4px 0 8px; text-wrap: balance }
 .hero-sub { font-family: var(--f-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted) }
-/* last year's film */
-.film { margin: 22px 0 0; background: #0d0d0c; padding: 6px 6px 20px; border-radius: 2px; position: relative }
-.film img { width: 100%; height: auto; aspect-ratio: var(--ar); object-fit: cover; background: #222 }
+/* last year's prints, scattered through the page */
+.film { margin: 22px 0 0; background: #fff; padding: 7px 7px 22px; border-radius: 2px; position: relative;
+  box-shadow: 0 1px 2px rgb(60 48 24 / .18), 0 8px 20px rgb(60 48 24 / .10); transform: rotate(var(--tilt, 0deg)) }
+.film img { width: 100%; height: auto; aspect-ratio: var(--ar); object-fit: cover; background: var(--sunk) }
 .film + h2 { margin-top: 14px }
-.roll { display: flex; gap: 4px; overflow-x: auto; margin: 10px calc(-1 * max(16px, env(safe-area-inset-left, 0px))) 0; padding: 16px max(16px, env(safe-area-inset-left, 0px)); background: #0d0d0c;
-  scroll-snap-type: x proximity; scrollbar-width: none;
-  background-image: repeating-linear-gradient(90deg, transparent 0 6px, #3a3936 6px 13px, transparent 13px 18px), repeating-linear-gradient(90deg, transparent 0 6px, #3a3936 6px 13px, transparent 13px 18px);
-  background-size: 100% 5px, 100% 5px; background-position: 0 5px, 0 calc(100% - 5px); background-repeat: no-repeat }
-.roll::-webkit-scrollbar { display: none }
-.roll figure { margin: 0; flex: 0 0 auto; scroll-snap-align: start; position: relative }
-.roll img { height: 168px; width: auto; aspect-ratio: var(--ar); object-fit: cover; background: #222 }
-.roll figcaption { font-family: var(--f-mono); font-size: 9px; letter-spacing: .14em; color: #e5a03a; margin-top: 4px }
-@media (min-width: 640px) { .roll { margin-inline: 0; border-radius: 2px } }
+.pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; margin-top: 24px }
+.pair .film { margin: 0 }
+.pair .film:nth-child(1) { --tilt: -1.4deg } .pair .film:nth-child(2) { --tilt: 1.2deg; margin-top: 14px }
+.pair .film figcaption { font-size: 8.5px; letter-spacing: .12em }
+.film.wide { --tilt: .6deg }
+@media (prefers-reduced-motion: reduce) { .film { transform: none } }
 /* board: three prints */
 .teams { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 14px }
 .tcard { background: var(--surface); border-radius: var(--r); padding: 0 0 10px; overflow: hidden }
@@ -136,7 +136,7 @@ details.strokes summary { color: var(--sky); font-weight: 600; cursor: pointer; 
 .seg small { display: block; font-family: var(--f-mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; margin-top: 4px }
 .groups { display: flex; gap: 6px; overflow-x: auto; padding: 10px 0 2px; scrollbar-width: none }
 .groups button { flex: 0 0 auto; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 8px 13px; font-size: 13px; font-weight: 600; white-space: nowrap }
-.groups button[aria-pressed="true"] { border-color: var(--sky); background: var(--sky); color: #0d1a29 }
+.groups button[aria-pressed="true"] { border-color: var(--sky); background: var(--sky); color: #fff }
 .hole { background: var(--surface); border-radius: var(--r); margin-top: 12px; overflow: hidden }
 /* hole header: a frame of sky over fairway, like last year's shots */
 .hhead { display: grid; grid-template-columns: 54px 1fr 54px; align-items: center; color: #fff;
@@ -147,26 +147,26 @@ details.strokes summary { color: var(--sky); font-weight: 600; cursor: pointer; 
 .hhead .hn { font-family: var(--f-display); font-size: 44px; line-height: 1; text-shadow: 0 2px 10px rgb(10 40 80 / .45) }
 .hhead .hi { font-family: var(--f-mono); font-size: 12px; font-weight: 500; letter-spacing: .04em; margin-top: 10px; color: #fff; text-shadow: 0 1px 3px rgb(0 0 0 / .55) }
 /* film edge with sprocket holes */
-.strip { position: relative; display: flex; gap: 2px; overflow-x: auto; padding: 14px 10px; background: #121211; scrollbar-width: none;
-  background-image: repeating-linear-gradient(90deg, transparent 0 6px, #3a3936 6px 13px, transparent 13px 18px), repeating-linear-gradient(90deg, transparent 0 6px, #3a3936 6px 13px, transparent 13px 18px);
+.strip { position: relative; display: flex; gap: 2px; overflow-x: auto; padding: 14px 10px; background: #e6dcc6; scrollbar-width: none;
+  background-image: repeating-linear-gradient(90deg, transparent 0 6px, #fbf8f0 6px 13px, transparent 13px 18px), repeating-linear-gradient(90deg, transparent 0 6px, #fbf8f0 6px 13px, transparent 13px 18px);
   background-size: 100% 5px, 100% 5px; background-position: 0 3px, 0 calc(100% - 3px); background-repeat: no-repeat }
-.strip button { flex: 0 0 auto; min-width: 32px; height: 30px; border: 0; background: transparent; font-family: var(--f-mono); font-size: 12px; font-weight: 500; color: #8a867c }
+.strip button { flex: 0 0 auto; min-width: 32px; height: 30px; border: 0; background: transparent; font-family: var(--f-mono); font-size: 12px; font-weight: 500; color: var(--muted) }
 .strip button.done { color: var(--flag) }
-.strip button.cur { background: var(--flag); color: #1b1408 }
+.strip button.cur { background: var(--flag); color: #fff }
 .strip .gap { width: 10px; flex: 0 0 auto }
 .ent { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 13px 12px; border-top: 1px solid var(--line) }
 .ent .nm { font-weight: 600; font-size: 17px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap }
 .ent .sm { font-size: 12.5px; color: var(--muted) }
 .dots { color: var(--flag); letter-spacing: 1px; font-size: 13px }
 .step { display: flex; align-items: center; gap: 6px }
-.step button { width: 54px; height: 54px; border-radius: var(--r); border: 1px solid #4a4a46; background: var(--sunk); font-size: 28px; font-weight: 400; line-height: 1; color: var(--ink) }
-.step button:active { transform: scale(.96); background: #3c3c39 }
+.step button { width: 54px; height: 54px; border-radius: var(--r); border: 1px solid var(--edge); background: var(--sunk); font-size: 28px; font-weight: 400; line-height: 1; color: var(--ink) }
+.step button:active { transform: scale(.96); background: #e2d9c4 }
 .step .val { width: 54px; text-align: center; font-family: var(--f-mono); font-weight: 600; font-size: 32px; line-height: 1 }
 .step .val.empty { color: var(--muted); opacity: .35 }
 .step .val.birdie { color: var(--good) }
 .step .val.bogey2 { color: var(--bad) }
 .clr { border: 0; background: none; color: var(--muted); font-size: 12px; text-decoration: underline; padding: 2px 0 }
-.hres { padding: 12px; background: #1f1f1e; border-top: 1px solid var(--line); font-size: 14px; display: flex; flex-direction: column; gap: 4px }
+.hres { padding: 12px; background: var(--sunk); border-top: 1px solid var(--line); font-size: 14px; display: flex; flex-direction: column; gap: 4px }
 .hres b { font-weight: 600 }
 .next { display: block; width: 100%; margin-top: 10px; border: 0; border-radius: var(--r); background: var(--fair); color: var(--fair-ink); font-weight: 700; font-size: 16px; padding: 16px }
 .card { overflow-x: auto; margin-top: 14px; background: var(--surface); border-radius: var(--r) }
@@ -185,20 +185,21 @@ details.strokes summary { color: var(--sky); font-weight: 600; cursor: pointer; 
 .f:first-child { border-top: 0 }
 .f label { flex: 1; min-width: 0 }
 .f .hint { display: block; font-size: 12px; color: var(--muted) }
-.f input[type=number] { width: 84px; padding: 8px; border: 1px solid #4a4a46; border-radius: var(--r); background: var(--bg); text-align: right; font-family: var(--f-mono) }
-.f select { padding: 8px; border: 1px solid #4a4a46; border-radius: var(--r); background: var(--bg); max-width: 55% }
+.f input[type=number] { width: 84px; padding: 8px; border: 1px solid var(--edge); border-radius: var(--r); background: var(--bg); text-align: right; font-family: var(--f-mono) }
+.f select { padding: 8px; border: 1px solid var(--edge); border-radius: var(--r); background: var(--bg); max-width: 55% }
 .toggle { width: 26px; height: 26px; accent-color: var(--fair) }
-.idx td input { width: 72px; padding: 7px; border: 1px solid #4a4a46; border-radius: var(--r); background: var(--bg); text-align: right; font-family: var(--f-mono) }
+.idx td input { width: 72px; padding: 7px; border: 1px solid var(--edge); border-radius: var(--r); background: var(--bg); text-align: right; font-family: var(--f-mono) }
 .flag { color: var(--flag); font-size: 12px }
 .note { font-size: 13.5px; padding: 12px; border-left: 3px solid var(--flag); background: color-mix(in srgb, var(--flag) 10%, var(--surface)); margin-top: 12px }
 .note ol { margin: 6px 0 0; padding-left: 20px }
 .note li { margin: 3px 0 }
-.btn { border: 1px solid #4a4a46; background: var(--sunk); border-radius: var(--r); padding: 10px 14px; font-weight: 600 }
+.btn { border: 1px solid var(--edge); background: var(--sunk); border-radius: var(--r); padding: 10px 14px; font-weight: 600 }
 .btn.pri { background: var(--fair); color: var(--fair-ink); border-color: var(--fair) }
 .btn:disabled { opacity: .45 }
-textarea { width: 100%; min-height: 80px; border: 1px solid #4a4a46; border-radius: var(--r); background: var(--bg); color: var(--ink); padding: 8px; font: 12px var(--f-mono) }
+textarea { width: 100%; min-height: 80px; border: 1px solid var(--edge); border-radius: var(--r); background: var(--bg); color: var(--ink); padding: 8px; font: 12px var(--f-mono) }
 /* weather: each course a print with a sky band */
 .wx { background: var(--surface); border-radius: var(--r); margin-top: 12px; overflow: hidden }
+.wx .wx-photo { display: block; width: 100%; height: auto; aspect-ratio: var(--ar); background: var(--sunk) }
 .wx .skyband { height: 10px; background: linear-gradient(90deg, var(--sky-deep), var(--sky) 60%, var(--flag)) }
 .wx .body { padding: 14px }
 .wx .d { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap }
@@ -207,9 +208,9 @@ textarea { width: 100%; min-height: 80px; border: 1px solid #4a4a46; border-radi
 .wx .facts span { color: var(--muted); display: block; font-family: var(--f-mono); font-size: 10px; text-transform: uppercase; letter-spacing: .1em }
 .wx a, .lede a, .note a { color: var(--sky); font-weight: 600 }
 /* tab bar */
-nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background: #121211; border-top: 1px solid var(--line);
+nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--surface); border-top: 1px solid var(--line);
   display: grid; grid-template-columns: repeat(4, 1fr); padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px)) }
-nav.tabs a { text-decoration: none; color: #8f8b80; text-align: center; font-family: var(--f-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; padding: 7px 0 6px }
+nav.tabs a { text-decoration: none; color: var(--muted); text-align: center; font-family: var(--f-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; padding: 7px 0 6px }
 nav.tabs a .ic { display: block; font-family: var(--f-display); font-style: italic; font-size: 22px; letter-spacing: 0; text-transform: none; line-height: 1.05; color: var(--ink) }
 nav.tabs a[aria-current="page"] { color: var(--flag) }
 nav.tabs a[aria-current="page"] .ic { color: var(--flag) }
@@ -220,14 +221,7 @@ nav.tabs a[aria-current="page"] .ic { color: var(--flag) }
 </head>
 <body>
 <header class="top wrap">
-  <svg class="house-ic" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 44" aria-hidden="true">
-<g fill="#f4ecd4" stroke="#dcb44f" stroke-width="1.2" stroke-linejoin="round">
-<path d="M22 22H9c-4 0-6 3-6 6v12h19z"/><rect x="22" y="14" width="13" height="26"/><rect x="25" y="8" width="17" height="6"/><rect x="42" y="16" width="14" height="24"/><path d="M35 40V15q0-3 3-3h3q3 0 3 3v25z"/>
-</g>
-<g fill="#10512c"><circle cx="39.5" cy="19" r="2.2"/><path d="M37.5 40v-8q0-2 2-2t2 2v8z"/><rect x="6" y="25" width="3" height="5"/><rect x="11" y="25" width="3" height="5"/><rect x="16" y="25" width="3" height="5"/><rect x="25" y="18" width="3" height="5"/><rect x="30" y="18" width="3" height="5"/><rect x="25" y="28" width="3" height="5"/><rect x="30" y="28" width="3" height="5"/><rect x="45" y="20" width="3" height="5"/><rect x="50" y="20" width="3" height="5"/><rect x="45" y="30" width="3" height="5"/><rect x="50" y="30" width="3" height="5"/></g>
-<path d="M1 40.5h62" stroke="#6cb35a" stroke-width="2"/>
-</svg>
-
+  <img class="house-ic" src="photos/house-mark.jpg" width="199" height="104" alt="">
   <div>
     <h1>Dover Invitational</h1>
     <div class="sub">2026 · 54 holes · Nov 20–22</div>
@@ -559,8 +553,8 @@ if (typeof module !== 'undefined') module.exports = { COURSES, PLAYERS, TEAMS, D
 
 
 // ===== Art and photos =====
-const HOUSE = "<svg class=\"house-art\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 360 190\" role=\"img\" aria-label=\"The Dover house on the dunes above the ocean\">\n<defs>\n<linearGradient id=\"dvSky\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#8fc3ea\"/><stop offset=\".85\" stop-color=\"#e8efe3\"/></linearGradient>\n<linearGradient id=\"dvSea\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#2f7fc4\"/><stop offset=\"1\" stop-color=\"#5ca9e3\"/></linearGradient>\n<linearGradient id=\"dvGreen\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#2d7a3e\"/><stop offset=\"1\" stop-color=\"#10512c\"/></linearGradient>\n</defs>\n<rect width=\"360\" height=\"190\" fill=\"url(#dvSky)\"/>\n<g fill=\"#fff\" opacity=\".85\"><ellipse cx=\"300\" cy=\"34\" rx=\"22\" ry=\"6\"/><ellipse cx=\"314\" cy=\"30\" rx=\"12\" ry=\"6\"/><ellipse cx=\"48\" cy=\"52\" rx=\"16\" ry=\"4.5\"/><ellipse cx=\"58\" cy=\"49\" rx=\"9\" ry=\"4.5\"/></g>\n<g fill=\"none\" stroke=\"#3a4a44\" stroke-width=\"1.3\" stroke-linecap=\"round\"><path d=\"M258 52q4-4 8 0q4-4 8 0\"/><path d=\"M286 64q3-3 6 0q3-3 6 0\"/><path d=\"M70 30q3-3 6 0q3-3 6 0\"/></g>\n<rect y=\"118\" width=\"360\" height=\"22\" fill=\"url(#dvSea)\"/>\n<rect y=\"138\" width=\"360\" height=\"24\" fill=\"#e9dcb5\"/>\n<g stroke=\"#e8f3fb\" stroke-width=\"1\" opacity=\".7\" stroke-linecap=\"round\"><path d=\"M14 124h22M60 128h30M292 123h26M318 131h30M8 134h18\"/></g>\n<g stroke=\"#b08a2c\" stroke-width=\"1.1\" stroke-linejoin=\"round\">\n <!-- left rotunda wing -->\n <path d=\"M126 98H70c-15 0-24 9-24 22v32h80z\" fill=\"#f4ecd4\"/>\n <path d=\"M126 125H46\" fill=\"none\"/>\n <g fill=\"#1d5a3a\" stroke=\"none\">\n  <path d=\"M52 104h8v18h-10v-12c0-2 1-4 2-6z\"/><rect x=\"64\" y=\"103\" width=\"10\" height=\"19\"/><rect x=\"78\" y=\"103\" width=\"10\" height=\"19\"/><rect x=\"92\" y=\"103\" width=\"10\" height=\"19\"/><rect x=\"106\" y=\"103\" width=\"10\" height=\"19\"/>\n  <rect x=\"50\" y=\"129\" width=\"10\" height=\"19\"/><rect x=\"64\" y=\"129\" width=\"10\" height=\"19\"/><rect x=\"78\" y=\"129\" width=\"10\" height=\"19\"/><rect x=\"92\" y=\"129\" width=\"10\" height=\"19\"/><rect x=\"106\" y=\"129\" width=\"10\" height=\"19\"/>\n </g>\n <path d=\"M44 98h84\" fill=\"none\" stroke-width=\"1.6\"/>\n <path d=\"M48 98v-7M58 98v-7M68 98v-7M78 98v-7M88 98v-7M98 98v-7M108 98v-7M118 98v-7M48 91h78\" fill=\"none\"/>\n <!-- main block -->\n <rect x=\"126\" y=\"70\" width=\"58\" height=\"82\" fill=\"#f4ecd4\"/>\n <path d=\"M126 98h58M126 125h58\" fill=\"none\"/>\n <g fill=\"#1d5a3a\" stroke=\"none\">\n  <rect x=\"132\" y=\"76\" width=\"12\" height=\"16\"/><rect x=\"148\" y=\"76\" width=\"12\" height=\"16\"/><rect x=\"164\" y=\"76\" width=\"12\" height=\"16\"/>\n  <rect x=\"132\" y=\"103\" width=\"12\" height=\"17\"/><rect x=\"148\" y=\"103\" width=\"12\" height=\"17\"/><rect x=\"164\" y=\"103\" width=\"12\" height=\"17\"/>\n  <rect x=\"132\" y=\"130\" width=\"12\" height=\"17\"/><rect x=\"148\" y=\"130\" width=\"12\" height=\"17\"/><rect x=\"164\" y=\"130\" width=\"12\" height=\"17\"/>\n </g>\n <!-- top floor, set back, with flat roof -->\n <rect x=\"136\" y=\"50\" width=\"78\" height=\"20\" fill=\"#f4ecd4\"/>\n <path d=\"M130 50h90\" fill=\"none\" stroke-width=\"2\"/>\n <g fill=\"#1d5a3a\" stroke=\"none\"><rect x=\"142\" y=\"54\" width=\"12\" height=\"12\"/><rect x=\"158\" y=\"54\" width=\"12\" height=\"12\"/><rect x=\"196\" y=\"54\" width=\"12\" height=\"12\"/></g>\n <path d=\"M122 70h100\" fill=\"none\" stroke-width=\"1.6\"/>\n <path d=\"M124 70v-6M132 70v-6M216 70v-6M124 64h12M214 64h8\" fill=\"none\"/>\n <!-- entry tower with porthole -->\n <path d=\"M184 152V66q0-6 6-6h18q6 0 6 6v86z\" fill=\"#f7f0db\"/>\n <circle cx=\"199\" cy=\"80\" r=\"6.5\" fill=\"#1d5a3a\"/>\n <circle cx=\"199\" cy=\"80\" r=\"6.5\" fill=\"none\" stroke=\"#f7f0db\" stroke-width=\"1.4\"/>\n <rect x=\"194\" y=\"96\" width=\"10\" height=\"12\" fill=\"#1d5a3a\" stroke=\"none\"/>\n <path d=\"M192 152v-26q0-5 7-5t7 5v26z\" fill=\"#1d5a3a\"/>\n <path d=\"M199 121v31\" fill=\"none\" stroke=\"#c9a64a\"/>\n <!-- right wing with balconies -->\n <rect x=\"214\" y=\"72\" width=\"54\" height=\"80\" fill=\"#f4ecd4\"/>\n <path d=\"M214 100h54M214 126h54\" fill=\"none\"/>\n <g fill=\"#1d5a3a\" stroke=\"none\">\n  <rect x=\"220\" y=\"77\" width=\"12\" height=\"17\"/><rect x=\"236\" y=\"77\" width=\"12\" height=\"17\"/><rect x=\"252\" y=\"77\" width=\"10\" height=\"17\"/>\n  <rect x=\"220\" y=\"104\" width=\"12\" height=\"17\"/><rect x=\"236\" y=\"104\" width=\"12\" height=\"17\"/><rect x=\"252\" y=\"104\" width=\"10\" height=\"17\"/>\n  <rect x=\"220\" y=\"131\" width=\"12\" height=\"17\"/><rect x=\"236\" y=\"131\" width=\"12\" height=\"17\"/><rect x=\"252\" y=\"131\" width=\"10\" height=\"17\"/>\n </g>\n <path d=\"M212 72h60\" fill=\"none\" stroke-width=\"1.6\"/>\n <g fill=\"none\"><path d=\"M214 100h58v-9h-58M220 100v-9M228 100v-9M236 100v-9M244 100v-9M252 100v-9M260 100v-9M268 100v-9\"/>\n <path d=\"M214 126h58v-9h-58M220 126v-9M228 126v-9M236 126v-9M244 126v-9M252 126v-9M260 126v-9M268 126v-9\"/></g>\n <!-- steps -->\n <path d=\"M188 152h22v4h-22zM186 156h26v4h-26z\" fill=\"#e6dcbf\"/>\n</g>\n<!-- dunes and hedges -->\n<g transform=\"translate(0 6)\">\n<path d=\"M0 156c20-10 40-12 58-6c14-8 30-9 46-2c14-7 30-6 44 0c16-6 32-6 50 0c18-8 38-8 56-1c16-7 34-7 52 0c18-6 38-6 54 2v31H0z\" fill=\"#3f8a4a\"/>\n<path d=\"M0 166c28-8 56-8 84-2c30-8 62-8 94-1c30-7 62-7 92 0c30-6 60-5 90 2v25H0z\" fill=\"url(#dvGreen)\"/>\n<g fill=\"#2a6b38\"><circle cx=\"60\" cy=\"152\" r=\"7\"/><circle cx=\"72\" cy=\"150\" r=\"8\"/><circle cx=\"84\" cy=\"153\" r=\"6\"/><circle cx=\"150\" cy=\"152\" r=\"7\"/><circle cx=\"162\" cy=\"150\" r=\"7\"/><circle cx=\"232\" cy=\"151\" r=\"7\"/><circle cx=\"246\" cy=\"149\" r=\"8\"/><circle cx=\"259\" cy=\"152\" r=\"6\"/><circle cx=\"300\" cy=\"152\" r=\"6\"/><circle cx=\"312\" cy=\"150\" r=\"7\"/></g>\n<g stroke=\"#a7c46a\" stroke-width=\"1\" stroke-linecap=\"round\" fill=\"none\" opacity=\".8\"><path d=\"M22 176l-3-9M25 176l1-10M28 176l4-8M330 174l-4-9M333 174l0-10M336 174l4-8\"/></g>\n</g>\n<!-- the flag -->\n<g><path d=\"M316 180v-26\" stroke=\"#f4ecd4\" stroke-width=\"1.4\"/><path d=\"M316 154l13 4.5l-13 4.5z\" fill=\"#dcb44f\"/><ellipse cx=\"316\" cy=\"180\" rx=\"5\" ry=\"1.6\" fill=\"#0b2a17\"/></g>\n</svg>\n";
-const PH = {"fri": "<figure class=\"film\" style=\"--ar:540/360\"><img src=\"photos/day-fri.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"Two players on a bluff above the ocean, last year\"><figcaption>Dover 2025 \u00b7 14</figcaption></figure>", "sat": "<figure class=\"film\" style=\"--ar:1400/933\"><img src=\"photos/day-sat.jpg\" width=\"1400\" height=\"933\" loading=\"lazy\" decoding=\"async\" alt=\"Lining up a putt with the mountains behind, last year\"><figcaption>Dover 2025 \u00b7 22</figcaption></figure>", "sun": "<figure class=\"film\" style=\"--ar:540/360\"><img src=\"photos/day-sun.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"A lone golfer on the ridge, last year\"><figcaption>Dover 2025 \u00b7 31</figcaption></figure>", "last": "<h2><span class=\"frame\">2025</span>Last year</h2><p class=\"lede\">Swipe the roll.</p><figure class=\"film\" style=\"--ar:540/360\"><img src=\"photos/last-year.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"The whole group piled up at sunset, last year\"><figcaption>Dover 2025 \u00b7 36</figcaption></figure><div class=\"roll\" aria-label=\"Photos from last year\"><figure style=\"--ar:540/360\"><img src=\"photos/strip-01.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>01A</figcaption></figure><figure style=\"--ar:540/360\"><img src=\"photos/strip-02.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>02A</figcaption></figure><figure style=\"--ar:540/360\"><img src=\"photos/strip-03.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>03A</figcaption></figure><figure style=\"--ar:540/360\"><img src=\"photos/strip-04.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>04A</figcaption></figure><figure style=\"--ar:540/360\"><img src=\"photos/strip-05.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>05A</figcaption></figure><figure style=\"--ar:540/360\"><img src=\"photos/strip-06.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>06A</figcaption></figure><figure style=\"--ar:360/540\"><img src=\"photos/strip-07.jpg\" width=\"360\" height=\"540\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>07A</figcaption></figure><figure style=\"--ar:720/480\"><img src=\"photos/strip-08.jpg\" width=\"720\" height=\"480\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>08A</figcaption></figure><figure style=\"--ar:360/540\"><img src=\"photos/strip-09.jpg\" width=\"360\" height=\"540\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>09A</figcaption></figure><figure style=\"--ar:540/360\"><img src=\"photos/strip-10.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>10A</figcaption></figure><figure style=\"--ar:360/540\"><img src=\"photos/strip-11.jpg\" width=\"360\" height=\"540\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>11A</figcaption></figure><figure style=\"--ar:480/720\"><img src=\"photos/strip-12.jpg\" width=\"480\" height=\"720\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>12A</figcaption></figure></div>"};
+let HOUSE = "<img class=\"house-art\" src=\"photos/house.jpg\" width=\"1080\" height=\"655\" alt=\"The Dover beach house on the dunes\">";
+const PH = {"boardTop": "<figure class=\"film wide\" style=\"--ar:540/360\"><img src=\"photos/last-year.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"The whole group piled up at sunset, last year\"><figcaption>Dover 2025 \u00b7 36</figcaption></figure>", "boardFri": "<div class=\"pair\"><figure class=\"film\" style=\"--ar:540/360\"><img src=\"photos/strip-01.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>Dover 2025 \u00b7 03</figcaption></figure><figure class=\"film\" style=\"--ar:540/360\"><img src=\"photos/strip-02.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>Dover 2025 \u00b7 07</figcaption></figure></div>", "boardSat": "<div class=\"pair\"><figure class=\"film\" style=\"--ar:360/540\"><img src=\"photos/strip-07.jpg\" width=\"360\" height=\"540\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>Dover 2025 \u00b7 11</figcaption></figure><figure class=\"film\" style=\"--ar:360/540\"><img src=\"photos/strip-09.jpg\" width=\"360\" height=\"540\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>Dover 2025 \u00b7 15</figcaption></figure></div>", "boardEnd": "<figure class=\"film wide\" style=\"--ar:720/480\"><img src=\"photos/strip-08.jpg\" width=\"720\" height=\"480\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>Dover 2025 \u00b7 19</figcaption></figure><div class=\"pair\"><figure class=\"film\" style=\"--ar:540/360\"><img src=\"photos/strip-03.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>Dover 2025 \u00b7 24</figcaption></figure><figure class=\"film\" style=\"--ar:540/360\"><img src=\"photos/strip-04.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>Dover 2025 \u00b7 27</figcaption></figure></div>", "wx_fri": "<img class=\"wx-photo\" style=\"--ar:540/360\" src=\"photos/day-fri.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"Two players on a bluff above the ocean, last year\">", "wx_sat": "<img class=\"wx-photo\" style=\"--ar:1400/933\" src=\"photos/day-sat.jpg\" width=\"1400\" height=\"933\" loading=\"lazy\" decoding=\"async\" alt=\"Lining up a putt with the mountains behind, last year\">", "wx_sun": "<img class=\"wx-photo\" style=\"--ar:540/360\" src=\"photos/day-sun.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"A lone golfer on the ridge, last year\">", "score": "<figure class=\"film wide\" style=\"--ar:540/360\"><img src=\"photos/strip-10.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>Dover 2025 \u00b7 30</figcaption></figure>", "setupTop": "<div class=\"pair\"><figure class=\"film\" style=\"--ar:360/540\"><img src=\"photos/strip-11.jpg\" width=\"360\" height=\"540\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>Dover 2025 \u00b7 33</figcaption></figure><figure class=\"film\" style=\"--ar:480/720\"><img src=\"photos/strip-12.jpg\" width=\"480\" height=\"720\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>Dover 2025 \u00b7 34</figcaption></figure></div>", "setupEnd": "<div class=\"pair\"><figure class=\"film\" style=\"--ar:540/360\"><img src=\"photos/strip-05.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>Dover 2025 \u00b7 01</figcaption></figure><figure class=\"film\" style=\"--ar:540/360\"><img src=\"photos/strip-06.jpg\" width=\"540\" height=\"360\" loading=\"lazy\" decoding=\"async\" alt=\"Last year at the Dover Invitational\"><figcaption>Dover 2025 \u00b7 05</figcaption></figure></div>"};
 
 // ===== App state =====
 const LS = {
@@ -775,9 +769,9 @@ function renderBoard(c, sc) {
       ${x.live ? `<div class="proj num">${fmtPts(x.proj)} if it ended now</div>` : ''}</div>`;
   }).join('') + `</div><div class="onLine">${fmtPts(possible)} points on the line: Friday ${fmtPts(c.fri.pts.reduce((a, b) => a + b, 0))}, Saturday 3, Sunday 9. Match wins are worth ${fmtPts(c.matchPts.win)}, halves ${fmtPts(c.matchPts.halve)}.</div>`;
 
+  h += PH.boardTop;
   // Friday
   const F = W.F;
-  h += PH.fri;
   h += `<h2><span class="frame">DAY 1</span>Friday at Sandpiper</h2><p class="lede">Four-man shamble. Best ${c.fri.bestN} net scores count on each hole. ${c.fri.pct}% handicaps, strokes off ${pName(F.lowId)}.</p>
   <div class="list"><table class="std"><thead><tr><th>Pos</th><th>Team</th><th class="r">Net</th><th class="r">Thru</th><th class="r">Pts</th></tr></thead><tbody>` +
     F.sorted.map(t => `<tr class="${TEAMCLS[t.id]}"><td class="num">${t.thru ? (t.tied ? 'T' : '') + t.pos : '–'}</td><td><span class="tname"><span class="chip-dot"></span>${t.name.replace('Team ', '')}</span></td>
@@ -788,12 +782,12 @@ function renderBoard(c, sc) {
     `</div>${PLAYERS.some(p => F.alloc[p.id].capped) ? '<p class="lede">* Capped at one stroke per hole.</p>' : ''}</details>`;
 
   // Saturday
-  h += PH.sat;
+  h += PH.boardFri;
   h += `<h2><span class="frame">DAY 2</span>Saturday at Soule Park</h2><p class="lede">2v2 scramble match play. Side handicap is ${c.sat.low}% of the lower course handicap plus ${c.sat.high}% of the higher.</p><div class="list">` +
     W.S.map(m => matchRow(m.ta, m.tb, m.a, m.b, m.status, `Sides ${m.A.hcp} vs ${m.B.hcp}. ` + strokeNote(m.recv === 'A' ? m.a : m.b, m.alloc, 'strokes'))).join('') + `</div>`;
 
   // Sunday
-  h += PH.sun;
+  h += PH.boardSat;
   h += `<h2><span class="frame">DAY 3</span>Sunday at Olivas</h2><p class="lede">Front 9 best ball 2v2, back 9 singles. 9-hole handicaps at ${c.sun.pct}%, strokes off the low player in each match.</p>`;
   W.U.forEach(g => {
     const fr = g.front;
@@ -803,7 +797,7 @@ function renderBoard(c, sc) {
       g.singles.map(s => matchRow(s.ta, s.tb, [s.a], [s.b], s.status, `Back 9 singles. ` + strokeNote(s.recv === 'A' ? [s.a] : [s.b], s.alloc, 'strokes'))).join('') + `</div>`;
   });
   h += `<p class="lede" style="margin-top:10px">* Capped at one stroke per hole.</p>`;
-  h += PH.last;
+  h += PH.boardEnd;
   return h;
 }
 
@@ -906,6 +900,7 @@ function renderScore(c, sc) {
       return r + (i === 8 ? sub(0, 9, 'Out') : '') + (i === 17 ? sub(9, 18, 'In') + sub(0, 18, 'Total') : '');
     }).join('') + `</tbody></table></div>`;
   if (round === 'fri') out += `<p class="lede" style="margin-top:6px">Underlined scores counted toward the team net.</p>`;
+  out += PH.score;
   return out;
 }
 
@@ -918,7 +913,7 @@ function renderWeather(c) {
     const co = COURSES[r], t = co.tees[c.tees[r]], w = wx[r];
     const date = new Date(co.date + 'T12:00:00');
     const dstr = date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
-    h += `<div class="wx"><div class="skyband"></div><div class="body"><div class="d"><div><div class="eyebrow">${dstr} · ${co.town}</div><h3>${co.name}</h3></div>
+    h += `<div class="wx">${PH["wx_" + r]}<div class="body"><div class="d"><div><div class="eyebrow">${dstr} · ${co.town}</div><h3>${co.name}</h3></div>
       ${w && w.hi != null ? `<div class="temps num">${Math.round(w.hi)}° <span style="color:var(--muted);font-size:28px">${Math.round(w.lo)}°</span></div>` : ''}</div>
       <div class="facts">
         ${w && w.hi != null ? `<div><span>Sky</span>${esc(w.summary || WMO[w.code] || '–')}</div><div><span>Rain chance</span>${w.rain ?? '–'}%</div><div><span>Wind</span>${w.wind != null ? Math.round(w.wind) + ' mph' : '–'}</div>` : `<div style="grid-column:1/-1;color:var(--muted)">Forecast not added yet. The NWS link below has the current outlook.</div>`}
@@ -939,6 +934,7 @@ function renderSetup(c) {
     : `<div class="note">This phone isn't connected to the shared scorecard right now${S.loading ? '' : ', so scores you enter save on this phone'}. You can send them from the bottom of this page.</div>`;
   h += `<h2 style="font-size:22px">Keep score from any phone</h2><div class="note" style="margin-top:6px">Anyone with the link can enter scores, no sign-in, and every phone updates live. The tag at the top reads <b>Live</b> when a phone is connected.
     <ol><li>Open the link in Safari or Chrome.</li><li>Tap <b>Share</b>, then <b>Add to Home Screen</b>, to get the house icon like an app.</li></ol></div>`;
+  h += PH.setupTop;
   h += `<h2 style="font-size:22px">Handicap indexes</h2><div class="list"><table class="std idx"><thead><tr><th>Player</th><th>Index</th><th class="r">Fri</th><th class="r">Sat</th><th class="r">Sun</th></tr></thead><tbody>` +
     PLAYERS.map(p => `<tr class="${TEAMCLS[p.team]}"><td><span class="tname"><span class="chip-dot"></span>${p.name}</span>${p.id === 'sivan' ? '<div class="flag">Listed 1000 and 33; set to 36</div>' : ''}</td>
       <td><input type="number" step="0.1" inputmode="decimal" id="idx-${p.id}" data-cfg="idx.${p.id}" value="${c.idx[p.id]}"></td>
@@ -983,6 +979,7 @@ function renderSetup(c) {
     <div style="display:flex;gap:8px;align-items:center;margin-top:8px"><button class="btn pri" data-act="import">Add these scores</button><span class="lede" style="margin:0" id="imp-msg">${S.importMsg || ''}</span></div>
   </div>`;
   h += `<p class="lede" style="margin-top:14px">Course handicap = index × slope ÷ 113 + (rating − par), rounded. Scorecards from Greenskeeper (Sandpiper) and GolfPass (Soule Park, Olivas).</p>`;
+  h += PH.setupEnd;
   return h;
 }
 
