@@ -312,6 +312,25 @@ nav.tabs a .ic { font-family: var(--f-display); font-style: normal; color: var(-
 nav.tabs a[aria-current="page"], nav.tabs a[aria-current="page"] .ic { color: #fff }
 nav.tabs a[aria-current="page"] { box-shadow: inset 0 -2px 0 var(--gold) }
 :focus-visible { outline-color: var(--gold) }
+
+/* tee shot / drive tracker */
+.drv { border-top: 1px solid var(--line); background: var(--surface) }
+.drv-side { padding: 11px 12px 12px }
+.drv-side + .drv-side { border-top: 1px dashed var(--line) }
+.drv-q { font-family: var(--f-mono); font-weight: 600; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--flag); margin-bottom: 7px }
+.drv-q .tname { letter-spacing: .06em }
+.drv-b { display: grid; grid-template-columns: repeat(auto-fit, minmax(68px, 1fr)); gap: 6px }
+.drv-b button { border: 1px solid var(--edge); background: var(--bg); padding: 9px 4px; font-weight: 700; font-size: 14px; border-radius: 0; color: var(--ink); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.drv-b button[aria-pressed="true"] { background: var(--green); border-color: var(--green); color: #fff; box-shadow: inset 0 -2px 0 var(--gold) }
+.drv-n { font-size: 12.5px; color: var(--muted); margin-top: 7px }
+.drv-n .ok { color: var(--green); font-weight: 700 }
+.drv-n .warn { color: var(--red); font-weight: 700 }
+
+.rules .rule { padding: 12px 14px; border-top: 1px solid var(--line) }
+.rules .rule:first-child { border-top: 0 }
+.rules h3 { font-size: 21px; color: var(--green); margin: 2px 0 4px }
+.rules ul { margin: 0; padding-left: 18px; font-size: 14px }
+.rules li { margin: 4px 0 }
 </style>
 
 </head>
@@ -401,7 +420,7 @@ const DEFAULT_CONFIG = {
   idx: Object.fromEntries(PLAYERS.map(p => [p.id, p.idx])),
   tees: { fri: 'Gold', sat: 'Oak', sun: 'Tour' },
   capOne: true,
-  fri: { pct: 50, bestN: 2, pts: [3, 1.5, 0] },
+  fri: { pct: 50, bestN: 2, pts: [2, 1, 0] },
   sat: { low: 20, high: 40 },
   sun: { pct: 100, swap: false, singles: ['auto', 'auto', 'auto'] },
   matchPts: { win: 1, halve: 0.5 },
@@ -410,6 +429,8 @@ const DEFAULT_CONFIG = {
 function mergeConfig(stored) {
   const c = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
   if (!stored) return c;
+  // Nov 14 rules update: Friday is 2/1/0. A config saved before then still carries the old 3/1.5/0 default.
+  if (stored.fri && JSON.stringify(stored.fri.pts) === '[3,1.5,0]') { stored = JSON.parse(JSON.stringify(stored)); delete stored.fri.pts; }
   for (const k of Object.keys(c)) {
     if (stored[k] === undefined) continue;
     if (c[k] && typeof c[k] === 'object' && !Array.isArray(c[k])) Object.assign(c[k], stored[k]);
@@ -603,11 +624,14 @@ function sunday(cfg, scores) {
     const front = runMatch(cfg, 'sun', FRONT, best);
     // back 9 singles
     const sg = singlesFor(cfg, gi);
+    // Handicaps capped at 18 strokes (9 on a nine) off the best player in the group
+    const capG = id => (cfg.capOne ? Math.min(ph9(id), lo + 9) : ph9(id));
     const singles = sg.pairs.map(([pa, pb]) => {
-      const x = ph9(pa), y = ph9(pb);
-      const diff = Math.abs(x - y);
+      const x = capG(pa), y = capG(pb);
+      const diff = Math.abs(x - y), rawDiff = Math.abs(ph9(pa) - ph9(pb));
       const recv = x > y ? 'A' : y > x ? 'B' : null;
       const alloc = allocate(cfg, 'sun', diff, BACK);
+      if (rawDiff > alloc.given) { alloc.wanted = rawDiff; alloc.capped = true; }
       const strokes = (s, h) => (recv === s ? alloc.perHole[h] : 0);
       const net = (s, h) => { const id = s === 'A' ? pa : pb; const v = gross(scores, 'sun-' + id, h); return v === null ? null : v - strokes(s, h); };
       const m = runMatch(cfg, 'sun', BACK, net);
@@ -869,7 +893,7 @@ function renderBoard(c, sc) {
   h += PH.boardTop;
   // Friday
   const F = W.F;
-  h += `<h2><span class="frame">FIRST ROUND · FRIDAY</span>Sandpiper</h2><p class="lede">Four-man shamble. Best ${c.fri.bestN} net scores count on each hole. ${c.fri.pct}% handicaps, strokes off ${pName(F.lowId)}.</p>
+  h += `<h2><span class="frame">FIRST ROUND · FRIDAY</span>Sandpiper</h2><p class="lede">Four-man shamble. ${c.fri.pct}% of handicaps for each player, strokes off the lowest handicap player (${pName(F.lowId)}). Best ${c.fri.bestN} net scores of the team count on each hole. Every player's tee shot must be used at least once. ${fmtPts(c.fri.pts[0])} points for the lowest score, ${fmtPts(c.fri.pts[1])} for the middle team, ${fmtPts(c.fri.pts[2])} for last.</p>
   <div class="list"><table class="std"><thead><tr><th>Pos</th><th>Team</th><th class="r">Net</th><th class="r">Thru</th><th class="r">Pts</th></tr></thead><tbody>` +
     F.sorted.map(t => `<tr class="${TEAMCLS[t.id]}"><td class="num">${t.thru ? (t.tied ? 'T' : '') + t.pos : '–'}</td><td><span class="tname"><span class="chip-dot"></span>${t.name.replace('Team ', '')}</span></td>
       <td class="r big num ${t.thru && t.toPar < 0 ? 'under' : ''}">${t.thru ? toPar(t.toPar) : '–'}</td><td class="r num">${t.thru || '–'}</td><td class="r num">${t.thru ? fmtPts(t.pts) + (F.final ? '' : '*') : '–'}</td></tr>`).join('') +
@@ -880,12 +904,12 @@ function renderBoard(c, sc) {
 
   // Saturday
   h += PH.boardFri;
-  h += `<h2><span class="frame">SECOND ROUND · SATURDAY</span>Soule Park</h2><p class="lede">2v2 scramble match play. Side handicap is ${c.sat.low}% of the lower course handicap plus ${c.sat.high}% of the higher.</p><div class="list">` +
+  h += `<h2><span class="frame">SECOND ROUND · SATURDAY</span>Soule Park</h2><p class="lede">Two-man scramble, match play against the other team. Team handicap is ${c.sat.low}% of the best player's plus ${c.sat.high}% of the worst player's. Each player's drive must be used once per nine. Each match is worth ${fmtPts(c.matchPts.win)} point, ${fmtPts(c.matchPts.halve)} each for a tie.</p><div class="list">` +
     W.S.map(m => matchRow(m.ta, m.tb, m.a, m.b, m.status, `Sides ${m.A.hcp} vs ${m.B.hcp}. ` + strokeNote(m.recv === 'A' ? m.a : m.b, m.alloc, 'strokes'))).join('') + `</div>`;
 
   // Sunday
   h += PH.boardSat;
-  h += `<h2><span class="frame">FINAL ROUND · SUNDAY</span>Olivas Links</h2><p class="lede">Front 9 best ball 2v2, back 9 singles. 9-hole handicaps at ${c.sun.pct}%, strokes off the low player in each match.</p>`;
+  h += `<h2><span class="frame">FINAL ROUND · SUNDAY</span>Olivas Links</h2><p class="lede">Everyone plays their own ball. Front 9 is 2v2 net match play, back 9 is 1v1 net match play. Handicaps are capped at 18 strokes off the best player in the group, so nobody gets more than one stroke a hole. The front 9 is worth ${fmtPts(c.matchPts.win)} point and each back 9 match ${fmtPts(c.matchPts.win)} point, ${fmtPts(c.matchPts.halve)} each for a tie.</p>`;
   W.U.forEach(g => {
     const fr = g.front;
     const fs = [...g.a, ...g.b].filter(id => g.fAlloc[id].given).map(id => `${pName(id)} ${g.fAlloc[id].given}${g.fAlloc[id].capped ? '*' : ''}`).join(', ') || 'no strokes';
@@ -942,6 +966,34 @@ function holeResult(c, W, round, gi, h, sc) {
   if (h < 9) return line({ res: g.front.res, status: g.front.status }, g.a, g.b, g.ta, g.tb);
   return g.singles.map(s => line({ res: s.res, status: s.status }, [s.a], [s.b], s.ta, s.tb)).join('');
 }
+
+// ---- tee shot / drive tracker ----
+const driveKey = (round, gi, side) => round === 'fri' ? 'fri-drv' + TEAMS[gi].id : 'sun-drvs' + 'abc'[gi] + side;
+function driveSides(W, round, gi) {
+  if (round === 'fri') { const t = TEAMS[gi]; return [{ key: driveKey(round, gi), team: t.id, ids: PLAYERS.filter(p => p.team === t.id).map(p => p.id), label: '' }]; }
+  if (round === 'sat') { const m = W.S[gi]; return [['a', m.a, m.ta], ['b', m.b, m.tb]].map(([s, ids, team]) => ({ key: driveKey(round, gi, s), team, ids, label: names(ids) })); }
+  return [];
+}
+function driveBlock(W, round, gi, h, sc) {
+  const sides = driveSides(W, round, gi); if (!sides.length) return '';
+  const dv = (k, hh) => { const v = sc[k] && sc[k]['h' + (hh + 1)]; return typeof v === 'number' && v > 0 ? v : null; };
+  const span = round === 'fri' ? ALL18 : (h < 9 ? FRONT : BACK);
+  const where = round === 'fri' ? '' : (h < 9 ? ' on the front 9' : ' on the back 9');
+  return `<div class="drv">` + sides.map(sd => {
+    const cur = dv(sd.key, h);
+    const count = sd.ids.map((id, i) => span.filter(hh => dv(sd.key, hh) === i + 1).length);
+    const left = span.filter(hh => dv(sd.key, hh) === null).length;
+    const need = sd.ids.filter((id, i) => !count[i]).map(pName);
+    const tally = sd.ids.map((id, i) => `${pName(id)} ${count[i]}`).join(' · ');
+    let msg;
+    if (!need.length) msg = `<span class="ok">Everyone has a ${round === 'fri' ? 'tee shot' : 'drive'} in${where}.</span>`;
+    else if (need.length >= left) msg = `<span class="warn">${need.join(' and ')} ${need.length > 1 ? 'need' : 'needs'} a ${round === 'fri' ? 'tee shot' : 'drive'}${where}, ${left} ${left === 1 ? 'hole' : 'holes'} left.</span>`;
+    else msg = `Still ${need.length > 1 ? 'need' : 'needs'} one${where}: ${need.join(', ')}.`;
+    return `<div class="drv-side ${TEAMCLS[sd.team]}"><div class="drv-q">${sd.label ? `<span class="tname">${esc(sd.label)}</span>: whose drive?` : 'Whose tee shot did you use?'}</div>
+      <div class="drv-b">` + sd.ids.map((id, i) => `<button data-act="drive" data-k="${sd.key}" data-v="${i + 1}" aria-pressed="${cur === i + 1}">${pName(id)}</button>`).join('') + `</div>
+      <div class="drv-n">${tally}. ${msg}</div></div>`;
+  }).join('') + `</div>`;
+}
 function renderScore(c, sc) {
   const W = weekend(c, sc);
   const round = S.ui.round, gi = S.ui.group[round] || 0, h = S.ui.hole[round] || 0;
@@ -968,6 +1020,7 @@ function renderScore(c, sc) {
         <div class="val num ${cls}" aria-live="polite">${v === null ? par : v}</div>
         <button data-act="inc" data-k="${e.key}" aria-label="One more for ${esc(e.label)}">+</button></div></div>`;
   }).join('');
+  out += driveBlock(W, round, gi, h, sc);
   out += `<div class="hres">${holeResult(c, W, round, gi, h, sc)}</div></section>`;
   out += `<button class="next" data-act="${doneHole(h) ? 'hole' : 'fillpar'}" data-v="${h + 1}">${h === 17 && doneHole(h) ? 'Round complete' : doneHole(h) ? `Next: hole ${h + 2}` : `Save par for blanks${h < 17 ? ' and go to ' + (h + 2) : ''}`}</button>`;
   out += `<p class="lede" style="margin-top:8px">Grey numbers are a par placeholder until you tap − or +. Dots show strokes received.</p>`;
@@ -1032,6 +1085,25 @@ function renderSetup(c) {
   h += `<h2 style="font-size:22px">Keep score from any phone</h2><div class="note" style="margin-top:6px">Anyone with the link can enter scores, no sign-in, and every phone updates live. The tag at the top reads <b>Live</b> when a phone is connected.
     <ol><li>Open the link in Safari or Chrome.</li><li>Tap <b>Share</b>, then <b>Add to Home Screen</b>, to get the house icon like an app.</li></ol></div>`;
   h += PH.setupTop;
+  h += `<h2 style="font-size:22px">Rules</h2><div class="list rules">
+    <div class="rule"><div class="eyebrow">Friday · Sandpiper</div><h3>Four-man shamble</h3><ul>
+      <li>${c.fri.pct}% of handicaps for each player, strokes based off the lowest handicap player</li>
+      <li>${c.fri.bestN} best net scores of the team on each hole</li>
+      <li>Must use at least 1 tee shot per player</li>
+      <li>${fmtPts(c.fri.pts[0])} points for the team with the lowest score, ${fmtPts(c.fri.pts[1])} for the middle team, ${fmtPts(c.fri.pts[2])} for last</li></ul></div>
+    <div class="rule"><div class="eyebrow">Saturday · Soule Park</div><h3>Scramble</h3><ul>
+      <li>Team’s handicap = ${c.sat.low}% of the best player’s + ${c.sat.high}% of the worst player’s</li>
+      <li>Match play against the other team</li>
+      <li>Must use 1 drive from each player per 9 holes</li>
+      <li>Each match is worth up to ${fmtPts(c.matchPts.win)} point. A tied match is ${fmtPts(c.matchPts.halve)} point each</li></ul></div>
+    <div class="rule"><div class="eyebrow">Sunday · Olivas Links</div><h3>Match play: 2v2 front 9, 1v1 back 9</h3><ul>
+      <li>Everyone plays their own ball</li>
+      <li>Front 9 is 2v2 net match play using handicaps</li>
+      <li>Back 9 is 1v1 net match play using handicaps</li>
+      <li>Handicaps capped at 18 strokes off the best player in the group, so nobody receives more than 1 stroke per hole</li>
+      <li>Front 9 worth up to ${fmtPts(c.matchPts.win)} point, ${fmtPts(c.matchPts.halve)} for a tie</li>
+      <li>Each back 9 match worth up to ${fmtPts(c.matchPts.win)} point, ${fmtPts(c.matchPts.halve)} for a tie</li></ul></div>
+  </div>`;
   h += `<h2 style="font-size:22px">Handicap indexes</h2><div class="list"><table class="std idx"><thead><tr><th>Player</th><th>Index</th><th class="r">Fri</th><th class="r">Sat</th><th class="r">Sun</th></tr></thead><tbody>` +
     PLAYERS.map(p => `<tr class="${TEAMCLS[p.team]}"><td><span class="tname"><span class="chip-dot"></span>${p.name}</span>${p.id === 'sivan' ? '<div class="flag">Listed 1000 and 33; set to 36</div>' : ''}</td>
       <td><input type="number" step="0.1" inputmode="decimal" id="idx-${p.id}" data-cfg="idx.${p.id}" value="${c.idx[p.id]}"></td>
@@ -1043,7 +1115,7 @@ function renderSetup(c) {
       Object.entries(co.tees).map(([n, t]) => `<option value="${esc(n)}" ${c.tees[r] === n ? 'selected' : ''}>${esc(n)} · ${t.y.reduce((a, b) => a + b, 0)} · ${t.r}/${t.s}</option>`).join('') + `</select></div>`;
   }).join('') + `</div>`;
   const num = (id, path, v, label, hint, step = 1) => `<div class="f"><label for="${id}">${label}${hint ? `<span class="hint">${hint}</span>` : ''}</label><input type="number" inputmode="decimal" step="${step}" id="${id}" data-cfg="${path}" value="${v}"></div>`;
-  h += `<h2 style="font-size:22px">Rules</h2><div class="form">
+  h += `<h2 style="font-size:22px">Rule settings</h2><div class="form">
     <div class="f"><label for="cap">Max one stroke per hole<span class="hint">Nobody gets more than 18 strokes over 18 holes, or 9 over 9</span></label><input type="checkbox" class="toggle" id="cap" data-cfg="capOne" ${c.capOne ? 'checked' : ''}></div>
     ${num('fpct', 'fri.pct', c.fri.pct, 'Friday handicap %', 'Strokes off the low player')}
     ${num('fbest', 'fri.bestN', c.fri.bestN, 'Friday scores that count per hole', 'Best net scores of the four')}
@@ -1052,7 +1124,7 @@ function renderSetup(c) {
     ${num('fp3', 'fri.pts.2', c.fri.pts[2], 'Friday points for 3rd', '', 0.5)}
     ${num('slow', 'sat.low', c.sat.low, 'Saturday % of lower handicap')}
     ${num('shigh', 'sat.high', c.sat.high, 'Saturday % of higher handicap')}
-    ${num('spct', 'sun.pct', c.sun.pct, 'Sunday 9-hole handicap %', 'Applied to half the course handicap')}
+    ${num('spct', 'sun.pct', c.sun.pct, 'Sunday handicap %', 'Applied to half the course handicap for each nine')}
     ${num('mw', 'matchPts.win', c.matchPts.win, 'Points for a match win', '', 0.5)}
     ${num('mh', 'matchPts.halve', c.matchPts.halve, 'Points for a halved match', '', 0.5)}
   </div>`;
@@ -1097,6 +1169,7 @@ document.addEventListener('click', ev => {
     saveScore(k, h, n); return;
   }
   if (act === 'clear') { saveScore(el.dataset.k, h, null); return; }
+  if (act === 'drive') { const k = el.dataset.k, v = +el.dataset.v; saveScore(k, h, cur(k) === v ? null : v); return; }
   if (act === 'fillpar') {
     const W = weekend(c, sc);
     entrants(c, W, round, S.ui.group[round] || 0).forEach(e => { if (cur(e.key) === null) saveScore(e.key, h, par); });
