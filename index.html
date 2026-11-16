@@ -638,14 +638,12 @@ function sunday(cfg, scores) {
     const front = runMatch(cfg, 'sun', FRONT, best);
     // back 9 singles
     const sg = singlesFor(cfg, gi);
-    // Handicaps capped at 18 strokes (9 on a nine) off the best player in the group
-    const capG = id => (cfg.capOne ? Math.min(ph9(id), lo + 9) : ph9(id));
+    // Back 9 singles: head to head only. Strokes = half the difference of the two handicaps, max 1 a hole.
     const singles = sg.pairs.map(([pa, pb]) => {
-      const x = capG(pa), y = capG(pb);
-      const diff = Math.round(r2(Math.abs(x - y))), rawDiff = Math.round(r2(Math.abs(ph9(pa) - ph9(pb))));
+      const x = ph9(pa), y = ph9(pb);
+      const diff = Math.round(r2(Math.abs(x - y)));
       const recv = x > y ? 'A' : y > x ? 'B' : null;
       const alloc = allocate(cfg, 'sun', diff, BACK);
-      if (rawDiff > alloc.given) { alloc.wanted = rawDiff; alloc.capped = true; }
       const strokes = (s, h) => (recv === s ? alloc.perHole[h] : 0);
       const net = (s, h) => { const id = s === 'A' ? pa : pb; const v = gross(scores, 'sun-' + id, h); return v === null ? null : v - strokes(s, h); };
       const m = runMatch(cfg, 'sun', BACK, net);
@@ -923,7 +921,7 @@ function renderBoard(c, sc) {
 
   // Sunday
   h += PH.boardSat;
-  h += `<h2><span class="frame">FINAL ROUND · SUNDAY</span>Olivas Links</h2><div class="teetimes">Tee times 9:00, 9:10, 9:20 · ${esc(c.tees.sun)} tees</div><p class="lede">Everyone plays their own ball. Front 9 is 2v2 net match play, back 9 is 1v1 net match play. Handicaps are capped at 18 strokes off the best player in the group, so nobody gets more than one stroke a hole. The front 9 is worth ${fmtPts(c.matchPts.win)} point and each back 9 match ${fmtPts(c.matchPts.win)} point, ${fmtPts(c.matchPts.halve)} each for a tie.</p>`;
+  h += `<h2><span class="frame">FINAL ROUND · SUNDAY</span>Olivas Links</h2><div class="teetimes">Tee times 9:00, 9:10, 9:20 · ${esc(c.tees.sun)} tees</div><p class="lede">Everyone plays their own ball. Front 9 is 2v2 net match play, back 9 is 1v1 net match play. On the front 9, handicaps are capped at 18 strokes off the best player in the group. On the back 9, strokes come from the two players head to head: half the difference in their handicaps. Nobody gets more than one stroke a hole. The front 9 is worth ${fmtPts(c.matchPts.win)} point and each back 9 match ${fmtPts(c.matchPts.win)} point, ${fmtPts(c.matchPts.halve)} each for a tie.</p>`;
   W.U.forEach(g => {
     const fr = g.front;
     const fs = [...g.a, ...g.b].filter(id => g.fAlloc[id].given).map(id => `${pName(id)} ${g.fAlloc[id].given}${g.fAlloc[id].capped ? '*' : ''}`).join(', ') || 'no strokes';
@@ -1120,7 +1118,9 @@ function renderSetup(c) {
       <li>Play the ball as it lies</li>
       <li>Front 9 is 2v2 net match play using handicaps</li>
       <li>Back 9 is 1v1 net match play using handicaps</li>
-      <li>Handicaps capped at 18 strokes off the best player in the group, so nobody receives more than 1 stroke per hole</li>
+      <li>Front 9 handicaps capped at 18 strokes off the best player in the group</li>
+      <li>Back 9 strokes are head to head: half the difference between the two players’ handicaps</li>
+      <li>Nobody receives more than 1 stroke per hole</li>
       <li>Front 9 worth up to ${fmtPts(c.matchPts.win)} point, ${fmtPts(c.matchPts.halve)} for a tie</li>
       <li>Each back 9 match worth up to ${fmtPts(c.matchPts.win)} point, ${fmtPts(c.matchPts.halve)} for a tie</li></ul></div>
     <div class="rule"><div class="eyebrow">All three days</div><h3>On the course</h3><ul>
