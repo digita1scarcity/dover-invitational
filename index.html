@@ -331,6 +331,12 @@ nav.tabs a[aria-current="page"] { box-shadow: inset 0 -2px 0 var(--gold) }
 .rules h3 { font-size: 21px; color: var(--green); margin: 2px 0 4px }
 .rules ul { margin: 0; padding-left: 18px; font-size: 14px }
 .rules li { margin: 4px 0 }
+
+.teetimes { font-family: var(--f-mono); font-weight: 600; font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 2px 0 6px }
+.rules details.golden { margin: 8px 0 2px; font-size: 13.5px }
+.rules details.golden summary { cursor: pointer; color: var(--green); font-weight: 700 }
+.rules details.golden ol { padding-left: 20px; margin: 6px 0 0 }
+.rules details.golden li { margin: 6px 0 }
 </style>
 
 </head>
@@ -403,22 +409,22 @@ const PLAYERS = [
   { id: 'kyle',   name: 'Kyle',   team: 'jer', idx: 28 },
   { id: 'fromer', name: 'Fromer', team: 'sco', idx: 9.6 },
   { id: 'greg',   name: 'Greg',   team: 'sco', idx: 12.1 },
-  { id: 'josh',   name: 'Josh',   team: 'sco', idx: 15.6 },
+  { id: 'josh',   name: 'Josh',   team: 'sco', idx: 15.5 },
   { id: 'nolan',  name: 'Nolan',  team: 'sco', idx: 28 },
-  { id: 'dan',    name: 'Dan',    team: 'dan', idx: 11.0 },
+  { id: 'dan',    name: 'Dan',    team: 'dan', idx: 11.1 },
   { id: 'micah',  name: 'Micah',  team: 'dan', idx: 17.1 },
   { id: 'fasky',  name: 'Fasky',  team: 'dan', idx: 19.8 },
-  { id: 'sivan',  name: 'Sivan',  team: 'dan', idx: 36 },
+  { id: 'sivan',  name: 'Sivan',  team: 'dan', idx: 33 },
 ];
 const TEAMS = [
   { id: 'jer', name: 'Team Jeremy' },
-  { id: 'sco', name: 'Team Scott' },
+  { id: 'sco', name: 'Team Fromer' },
   { id: 'dan', name: 'Team Dan' },
 ];
 
 const DEFAULT_CONFIG = {
   idx: Object.fromEntries(PLAYERS.map(p => [p.id, p.idx])),
-  tees: { fri: 'Gold', sat: 'Oak', sun: 'Tour' },
+  tees: { fri: 'Silver', sat: 'Orange/Avocado', sun: 'Club', useCourse: false },
   capOne: true,
   fri: { pct: 50, bestN: 2, pts: [2, 1, 0] },
   sat: { low: 20, high: 40 },
@@ -430,7 +436,11 @@ function mergeConfig(stored) {
   const c = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
   if (!stored) return c;
   // Nov 14 rules update: Friday is 2/1/0. A config saved before then still carries the old 3/1.5/0 default.
-  if (stored.fri && JSON.stringify(stored.fri.pts) === '[3,1.5,0]') { stored = JSON.parse(JSON.stringify(stored)); delete stored.fri.pts; }
+  stored = JSON.parse(JSON.stringify(stored));
+  if (stored.fri && JSON.stringify(stored.fri.pts) === '[3,1.5,0]') delete stored.fri.pts;
+  // Nov 16 sheet: indexes still at the old defaults move to the sheet's numbers
+  const OLD_IDX = { dan: 11, josh: 15.6, sivan: 36 };
+  if (stored.idx) for (const [k, v] of Object.entries(OLD_IDX)) if (stored.idx[k] === v) delete stored.idx[k];
   for (const k of Object.keys(c)) {
     if (stored[k] === undefined) continue;
     if (c[k] && typeof c[k] === 'object' && !Array.isArray(c[k])) Object.assign(c[k], stored[k]);
@@ -443,6 +453,10 @@ const r1 = x => Math.round(x * 10) / 10;
 const pName = id => (PLAYERS.find(p => p.id === id) || { name: id }).name;
 const pTeam = id => (PLAYERS.find(p => p.id === id) || {}).team;
 
+// The handicap each format works from: the index itself (Josh's sheet), or the WHS course handicap for the tees.
+const useCourse = cfg => !!(cfg.tees && cfg.tees.useCourse);
+function hcp(cfg, round, pid) { return useCourse(cfg) ? courseHcp(cfg, round, pid) : cfg.idx[pid]; }
+const r2 = x => Math.round(x * 100) / 100;
 // WHS course handicap, rounded to a whole number
 function courseHcp(cfg, round, pid) {
   const c = COURSES[round], t = c.tees[cfg.tees[round]] || c.tees[c.defTee];
@@ -497,28 +511,28 @@ function matchStatus(results, holes) {
 
 // ---- pairings ----
 const SAT_MATCHES = [
-  { a: ['dan', 'sivan'], b: ['daniel', 'kyle'] },
+  { a: ['dan', 'sivan'], b: ['jeremy', 'david'] },
   { a: ['micah', 'fasky'], b: ['greg', 'josh'] },
-  { a: ['jeremy', 'david'], b: ['fromer', 'nolan'] },
+  { a: ['daniel', 'kyle'], b: ['fromer', 'nolan'] },
 ];
 function sunGroups(cfg) {
   const [x, y] = cfg.sun.swap ? ['fasky', 'micah'] : ['micah', 'fasky'];
   return [
     { a: ['dan', x], b: ['fromer', 'josh'] },
-    { a: [y, 'sivan'], b: ['david', 'kyle'] },
-    { a: ['jeremy', 'daniel'], b: ['greg', 'nolan'] },
+    { a: [y, 'sivan'], b: ['kyle', 'david'] },
+    { a: ['daniel', 'jeremy'], b: ['greg', 'nolan'] },
   ];
 }
 // Singles within a group: auto = closest course handicaps; 'straight' = 1v1,2v2; 'crossed' = 1v2,2v1
 function singlesFor(cfg, gi) {
   const g = sunGroups(cfg)[gi];
-  const ch = id => courseHcp(cfg, 'sun', id);
+  const ch = id => hcp(cfg, 'sun', id);
   const straight = [[g.a[0], g.b[0]], [g.a[1], g.b[1]]];
   const crossed = [[g.a[0], g.b[1]], [g.a[1], g.b[0]]];
   const mode = cfg.sun.singles[gi] || 'auto';
   if (mode === 'straight') return { pairs: straight, mode };
   if (mode === 'crossed') return { pairs: crossed, mode };
-  const d = ps => ps.reduce((s, [p, q]) => s + Math.abs(ch(p) - ch(q)), 0);
+  const d = ps => r2(ps.reduce((s, [p, q]) => s + Math.abs(ch(p) - ch(q)), 0));
   return { pairs: d(crossed) < d(straight) ? crossed : straight, mode };
 }
 
@@ -532,11 +546,11 @@ const gross = (scores, key, h) => {
 // ---- Friday shamble ----
 function friday(cfg, scores) {
   const ph = {};
-  for (const p of PLAYERS) ph[p.id] = Math.round(courseHcp(cfg, 'fri', p.id) * cfg.fri.pct / 100);
+  for (const p of PLAYERS) ph[p.id] = r2(hcp(cfg, 'fri', p.id) * cfg.fri.pct / 100);
   const low = Math.min(...PLAYERS.map(p => ph[p.id]));
   const lowId = PLAYERS.find(p => ph[p.id] === low).id;
-  const alloc = {};
-  for (const p of PLAYERS) alloc[p.id] = allocate(cfg, 'fri', ph[p.id] - low, ALL18);
+  const alloc = {}, share = {};
+  for (const p of PLAYERS) { share[p.id] = r2(ph[p.id] - low); alloc[p.id] = allocate(cfg, 'fri', Math.round(share[p.id]), ALL18); }
   const par = COURSES.fri.par;
   const teams = TEAMS.map(t => {
     const members = PLAYERS.filter(p => p.team === t.id).map(p => p.id);
@@ -569,7 +583,7 @@ function friday(cfg, scores) {
     i = j + 1;
   }
   const final = teams.every(t => t.thru === 18);
-  return { ph, low, lowId, alloc, teams, sorted, final };
+  return { ph, low, lowId, alloc, share, teams, sorted, final };
 }
 
 // ---- generic two-sided match ----
@@ -588,12 +602,12 @@ function runMatch(cfg, round, holes, sideNet) {
 function saturday(cfg, scores) {
   return SAT_MATCHES.map((m, mi) => {
     const side = ids => {
-      const chs = ids.map(id => courseHcp(cfg, 'sat', id));
+      const chs = ids.map(id => hcp(cfg, 'sat', id));
       const lo = Math.min(...chs), hi = Math.max(...chs);
-      return { chs, hcp: Math.round(lo * cfg.sat.low / 100 + hi * cfg.sat.high / 100) };
+      return { chs, hcp: r2(lo * cfg.sat.low / 100 + hi * cfg.sat.high / 100) };
     };
     const A = side(m.a), B = side(m.b);
-    const diff = Math.abs(A.hcp - B.hcp);
+    const diff = Math.round(r2(Math.abs(A.hcp - B.hcp)));
     const recv = A.hcp > B.hcp ? 'A' : B.hcp > A.hcp ? 'B' : null;
     const alloc = allocate(cfg, 'sat', diff, ALL18);
     const key = s => `sat-m${mi}-${s.toLowerCase()}`;
@@ -607,13 +621,13 @@ function saturday(cfg, scores) {
 // ---- Sunday ----
 function sunday(cfg, scores) {
   const groups = sunGroups(cfg);
-  const ph9 = id => Math.round(courseHcp(cfg, 'sun', id) * cfg.sun.pct / 100 / 2);
+  const ph9 = id => r2(hcp(cfg, 'sun', id) * cfg.sun.pct / 100 / 2);
   return groups.map((g, gi) => {
     // front 9 best ball, strokes off low man of the four
     const four = [...g.a, ...g.b];
     const lo = Math.min(...four.map(ph9));
     const fAlloc = {};
-    for (const id of four) fAlloc[id] = allocate(cfg, 'sun', ph9(id) - lo, FRONT);
+    for (const id of four) fAlloc[id] = allocate(cfg, 'sun', Math.round(r2(ph9(id) - lo)), FRONT);
     const pnet = (id, h) => { const v = gross(scores, 'sun-' + id, h); return v === null ? null : v - fAlloc[id].perHole[h]; };
     const best = (s, h) => {
       const ids = s === 'A' ? g.a : g.b;
@@ -628,7 +642,7 @@ function sunday(cfg, scores) {
     const capG = id => (cfg.capOne ? Math.min(ph9(id), lo + 9) : ph9(id));
     const singles = sg.pairs.map(([pa, pb]) => {
       const x = capG(pa), y = capG(pb);
-      const diff = Math.abs(x - y), rawDiff = Math.abs(ph9(pa) - ph9(pb));
+      const diff = Math.round(r2(Math.abs(x - y))), rawDiff = Math.round(r2(Math.abs(ph9(pa) - ph9(pb))));
       const recv = x > y ? 'A' : y > x ? 'B' : null;
       const alloc = allocate(cfg, 'sun', diff, BACK);
       if (rawDiff > alloc.given) { alloc.wanted = rawDiff; alloc.capped = true; }
@@ -669,7 +683,7 @@ function weekend(cfg, scores) {
   return { F, S, U, tot };
 }
 
-if (typeof module !== 'undefined') module.exports = { COURSES, PLAYERS, TEAMS, DEFAULT_CONFIG, mergeConfig, courseHcp, allocate, matchStatus, friday, saturday, sunday, weekend, singlesFor, sunGroups, FRONT, BACK, ALL18 };
+if (typeof module !== 'undefined') module.exports = { hcp, useCourse, COURSES, PLAYERS, TEAMS, DEFAULT_CONFIG, mergeConfig, courseHcp, allocate, matchStatus, friday, saturday, sunday, weekend, singlesFor, sunGroups, FRONT, BACK, ALL18 };
 
 
 // ===== Art and photos =====
@@ -893,7 +907,7 @@ function renderBoard(c, sc) {
   h += PH.boardTop;
   // Friday
   const F = W.F;
-  h += `<h2><span class="frame">FIRST ROUND · FRIDAY</span>Sandpiper</h2><p class="lede">Four-man shamble. ${c.fri.pct}% of handicaps for each player, strokes off the lowest handicap player (${pName(F.lowId)}). Best ${c.fri.bestN} net scores of the team count on each hole. Every player's tee shot must be used at least once. ${fmtPts(c.fri.pts[0])} points for the lowest score, ${fmtPts(c.fri.pts[1])} for the middle team, ${fmtPts(c.fri.pts[2])} for last.</p>
+  h += `<h2><span class="frame">FIRST ROUND · FRIDAY</span>Sandpiper</h2><div class="teetimes">Tee times 9:20, 9:30, 9:40 · ${esc(c.tees.fri)} tees</div><p class="lede">Four-man shamble. ${c.fri.pct}% of handicaps for each player, strokes off the lowest handicap player (${pName(F.lowId)}). Best ${c.fri.bestN} net scores of the team count on each hole. Every player's tee shot must be used at least once. ${fmtPts(c.fri.pts[0])} points for the lowest score, ${fmtPts(c.fri.pts[1])} for the middle team, ${fmtPts(c.fri.pts[2])} for last.</p>
   <div class="list"><table class="std"><thead><tr><th>Pos</th><th>Team</th><th class="r">Net</th><th class="r">Thru</th><th class="r">Pts</th></tr></thead><tbody>` +
     F.sorted.map(t => `<tr class="${TEAMCLS[t.id]}"><td class="num">${t.thru ? (t.tied ? 'T' : '') + t.pos : '–'}</td><td><span class="tname"><span class="chip-dot"></span>${t.name.replace('Team ', '')}</span></td>
       <td class="r big num ${t.thru && t.toPar < 0 ? 'under' : ''}">${t.thru ? toPar(t.toPar) : '–'}</td><td class="r num">${t.thru || '–'}</td><td class="r num">${t.thru ? fmtPts(t.pts) + (F.final ? '' : '*') : '–'}</td></tr>`).join('') +
@@ -904,12 +918,12 @@ function renderBoard(c, sc) {
 
   // Saturday
   h += PH.boardFri;
-  h += `<h2><span class="frame">SECOND ROUND · SATURDAY</span>Soule Park</h2><p class="lede">Two-man scramble, match play against the other team. Team handicap is ${c.sat.low}% of the best player's plus ${c.sat.high}% of the worst player's. Each player's drive must be used once per nine. Each match is worth ${fmtPts(c.matchPts.win)} point, ${fmtPts(c.matchPts.halve)} each for a tie.</p><div class="list">` +
+  h += `<h2><span class="frame">SECOND ROUND · SATURDAY</span>Soule Park</h2><div class="teetimes">Tee times 11:00, 11:10, 11:20 · ${esc(c.tees.sat)} tees</div><p class="lede">Two-man scramble, match play against the other team. Team handicap is ${c.sat.low}% of the best player's plus ${c.sat.high}% of the worst player's. Each player's drive must be used once per nine. Each match is worth ${fmtPts(c.matchPts.win)} point, ${fmtPts(c.matchPts.halve)} each for a tie.</p><div class="list">` +
     W.S.map(m => matchRow(m.ta, m.tb, m.a, m.b, m.status, `Sides ${m.A.hcp} vs ${m.B.hcp}. ` + strokeNote(m.recv === 'A' ? m.a : m.b, m.alloc, 'strokes'))).join('') + `</div>`;
 
   // Sunday
   h += PH.boardSat;
-  h += `<h2><span class="frame">FINAL ROUND · SUNDAY</span>Olivas Links</h2><p class="lede">Everyone plays their own ball. Front 9 is 2v2 net match play, back 9 is 1v1 net match play. Handicaps are capped at 18 strokes off the best player in the group, so nobody gets more than one stroke a hole. The front 9 is worth ${fmtPts(c.matchPts.win)} point and each back 9 match ${fmtPts(c.matchPts.win)} point, ${fmtPts(c.matchPts.halve)} each for a tie.</p>`;
+  h += `<h2><span class="frame">FINAL ROUND · SUNDAY</span>Olivas Links</h2><div class="teetimes">Tee times 9:00, 9:10, 9:20 · ${esc(c.tees.sun)} tees</div><p class="lede">Everyone plays their own ball. Front 9 is 2v2 net match play, back 9 is 1v1 net match play. Handicaps are capped at 18 strokes off the best player in the group, so nobody gets more than one stroke a hole. The front 9 is worth ${fmtPts(c.matchPts.win)} point and each back 9 match ${fmtPts(c.matchPts.win)} point, ${fmtPts(c.matchPts.halve)} each for a tie.</p>`;
   W.U.forEach(g => {
     const fr = g.front;
     const fs = [...g.a, ...g.b].filter(id => g.fAlloc[id].given).map(id => `${pName(id)} ${g.fAlloc[id].given}${g.fAlloc[id].capped ? '*' : ''}`).join(', ') || 'no strokes';
@@ -1087,33 +1101,44 @@ function renderSetup(c) {
   h += PH.setupTop;
   h += `<h2 style="font-size:22px">Rules</h2><div class="list rules">
     <div class="rule"><div class="eyebrow">Friday · Sandpiper</div><h3>Four-man shamble</h3><ul>
+      <li>Entire team tees off, then the team chooses the best drive to use for the hole, and everyone plays their own ball in from there</li>
       <li>${c.fri.pct}% of handicaps for each player, strokes based off the lowest handicap player</li>
       <li>${c.fri.bestN} best net scores of the team on each hole</li>
       <li>Must use at least 1 tee shot per player</li>
-      <li>${fmtPts(c.fri.pts[0])} points for the team with the lowest score, ${fmtPts(c.fri.pts[1])} for the middle team, ${fmtPts(c.fri.pts[2])} for last</li></ul></div>
+      <li>${fmtPts(c.fri.pts[0])} points for the team with the lowest score, ${fmtPts(c.fri.pts[1])} for the middle team, ${fmtPts(c.fri.pts[2])} for last</li>
+      <li>You can move the ball 1 club length from the tee shot while setting up your next shot, no closer to the hole, without changing surface (e.g. from rough to fairway)</li></ul></div>
     <div class="rule"><div class="eyebrow">Saturday · Soule Park</div><h3>Scramble</h3><ul>
+      <li>Both team members tee off, choose the best tee shot, and keep doing this every shot until the team’s ball is in the hole</li>
       <li>Team’s handicap = ${c.sat.low}% of the best player’s + ${c.sat.high}% of the worst player’s</li>
       <li>Match play against the other team</li>
       <li>Must use 1 drive from each player per 9 holes</li>
-      <li>Each match is worth up to ${fmtPts(c.matchPts.win)} point. A tied match is ${fmtPts(c.matchPts.halve)} point each</li></ul></div>
+      <li>Each match is worth up to ${fmtPts(c.matchPts.win)} point. A tied match is ${fmtPts(c.matchPts.halve)} point each</li>
+      <li>You can move the ball 1 club length on all full shots while setting up the next shot, no closer to the hole, without changing surface (e.g. from rough to fairway)</li>
+      <li>You can move the ball 1 putter head length on the green</li></ul></div>
     <div class="rule"><div class="eyebrow">Sunday · Olivas Links</div><h3>Match play: 2v2 front 9, 1v1 back 9</h3><ul>
       <li>Everyone plays their own ball</li>
+      <li>Play the ball as it lies</li>
       <li>Front 9 is 2v2 net match play using handicaps</li>
       <li>Back 9 is 1v1 net match play using handicaps</li>
       <li>Handicaps capped at 18 strokes off the best player in the group, so nobody receives more than 1 stroke per hole</li>
       <li>Front 9 worth up to ${fmtPts(c.matchPts.win)} point, ${fmtPts(c.matchPts.halve)} for a tie</li>
       <li>Each back 9 match worth up to ${fmtPts(c.matchPts.win)} point, ${fmtPts(c.matchPts.halve)} for a tie</li></ul></div>
+    <div class="rule"><div class="eyebrow">All three days</div><h3>On the course</h3><ul>
+      <li>Gimme putts are at your opponent’s discretion</li>
+      <li>Unsure what to do? Ask your playing partners</li></ul>
+      <details class="golden"><summary>The 9 situations you need to know</summary><ol><li>Play the ball as it lies.</li><li>Don't move, bend, or break anything growing or fixed, except in fairly taking your stance or swing. Don't press anything down.</li><li>You may lift natural objects not fixed or growing, except in a water hazard or bunker. No penalty.</li><li>Movable man-made objects may be moved. For immovable objects, you may take relief by dropping away from them within one club-length of the nearest point of relief, no nearer the hole, except in a water hazard or if the object defines out of bounds. In a bunker, you must drop in the bunker. No penalty.</li><li>You may take relief from casual water, ground under repair, burrowing animal holes or casts, anywhere except in a water hazard. On the putting green, place at the nearest point of relief, no nearer the hole; otherwise drop within one club-length of the nearest point of relief, no nearer the hole. In a bunker, you must drop in the bunker. No penalty.</li><li>In a water hazard or bunker, don't touch the water or ground with your hand or club before the stroke.</li><li>Hazards: if you hit your ball into a water hazard and cannot find or play it, either drop behind the point where the ball last crossed the hazard margin or at the place where you played the shot. On the tee, you may tee the ball. One penalty stroke. If you hit into a lateral hazard, you may also drop within two club-lengths of the point where the ball last crossed the hazard margin, or within two club-lengths of a point equidistant from the hole on the opposite margin. One penalty stroke.</li><li>Out of bounds, two options. A) When you hit your ball out of bounds or can't find it after five minutes of searching, go back and drop a ball at the place where you played the shot. One penalty stroke. B) Our preferred method to keep up pace of play: rather than walk all the way back, drop a ball within two club lengths inside the fairway from the point where the ball crossed out of bounds. You can place it as far backwards as you want but no closer to the hole. Two penalty strokes.</li><li>When you have an unplayable lie, you may drop a ball at the place where you played the previous shot, adding a penalty stroke. On the tee, you may tee the ball. Alternatively, drop within two club-lengths, no nearer the hole, or any distance behind the unplayable spot, keeping it between you and the hole. If the ball is in a bunker, you must drop in the bunker under either of the alternative options. If you can't play your ball that is in a water hazard, see rule 7.</li></ol></details></div>
   </div>`;
-  h += `<h2 style="font-size:22px">Handicap indexes</h2><div class="list"><table class="std idx"><thead><tr><th>Player</th><th>Index</th><th class="r">Fri</th><th class="r">Sat</th><th class="r">Sun</th></tr></thead><tbody>` +
-    PLAYERS.map(p => `<tr class="${TEAMCLS[p.team]}"><td><span class="tname"><span class="chip-dot"></span>${p.name}</span>${p.id === 'sivan' ? '<div class="flag">Listed 1000 and 33; set to 36</div>' : ''}</td>
+  const FS = friday(c, {});
+  h += `<h2 style="font-size:22px">Handicap indexes</h2><div class="list"><table class="std idx"><thead><tr><th>Player</th><th>Index</th>${useCourse(c) ? '<th class="r">Fri</th><th class="r">Sat</th><th class="r">Sun</th>' : '<th class="r">Friday strokes</th>'}</tr></thead><tbody>` +
+    PLAYERS.map(p => `<tr class="${TEAMCLS[p.team]}"><td><span class="tname"><span class="chip-dot"></span>${p.name}</span>${p.id === 'sivan' ? '<div class="flag">Sheet shows 33 and 35; set to 33</div>' : ''}</td>
       <td><input type="number" step="0.1" inputmode="decimal" id="idx-${p.id}" data-cfg="idx.${p.id}" value="${c.idx[p.id]}"></td>
-      ${['fri', 'sat', 'sun'].map(r => `<td class="r num">${courseHcp(c, r, p.id)}</td>`).join('')}</tr>`).join('') +
-    `</tbody></table></div><p class="lede" style="margin-top:6px">Fri/Sat/Sun columns are full course handicaps from the tees below, before format allowances.</p>`;
+      ${useCourse(c) ? ['fri', 'sat', 'sun'].map(r => `<td class="r num">${courseHcp(c, r, p.id)}</td>`).join('') : `<td class="r num">${FS.share[p.id]} <span class="lede">(${FS.alloc[p.id].given})</span></td>`}</tr>`).join('') +
+    `</tbody></table></div><p class="lede" style="margin-top:6px">${useCourse(c) ? 'Fri/Sat/Sun columns are full course handicaps from the tees below, before format allowances.' : `Friday strokes are 50% of each index minus 50% of ${pName(FS.lowId)}'s, rounded to whole strokes in brackets.`}</p>`;
   h += `<h2 style="font-size:22px">Tees</h2><div class="form">` + ['fri', 'sat', 'sun'].map(r => {
     const co = COURSES[r];
     return `<div class="f"><label for="tee-${r}">${co.day} · ${co.name}</label><select id="tee-${r}" data-cfg="tees.${r}">` +
       Object.entries(co.tees).map(([n, t]) => `<option value="${esc(n)}" ${c.tees[r] === n ? 'selected' : ''}>${esc(n)} · ${t.y.reduce((a, b) => a + b, 0)} · ${t.r}/${t.s}</option>`).join('') + `</select></div>`;
-  }).join('') + `</div>`;
+  }).join('') + `<div class="f"><label for="usec">Adjust handicaps for the tees<span class="hint">Off: strokes come straight from each index, like the sheet. On: course handicap from slope and rating.</span></label><input type="checkbox" class="toggle" id="usec" data-cfg="tees.useCourse" ${useCourse(c) ? 'checked' : ''}></div></div>`;
   const num = (id, path, v, label, hint, step = 1) => `<div class="f"><label for="${id}">${label}${hint ? `<span class="hint">${hint}</span>` : ''}</label><input type="number" inputmode="decimal" step="${step}" id="${id}" data-cfg="${path}" value="${v}"></div>`;
   h += `<h2 style="font-size:22px">Rule settings</h2><div class="form">
     <div class="f"><label for="cap">Max one stroke per hole<span class="hint">Nobody gets more than 18 strokes over 18 holes, or 9 over 9</span></label><input type="checkbox" class="toggle" id="cap" data-cfg="capOne" ${c.capOne ? 'checked' : ''}></div>
@@ -1147,7 +1172,7 @@ function renderSetup(c) {
     <textarea id="code-in" placeholder="CTC1:…"></textarea>
     <div style="display:flex;gap:8px;align-items:center;margin-top:8px"><button class="btn pri" data-act="import">Add these scores</button><span class="lede" style="margin:0" id="imp-msg">${S.importMsg || ''}</span></div>
   </div>`;
-  h += `<p class="lede" style="margin-top:14px">Course handicap = index × slope ÷ 113 + (rating − par), rounded. Scorecards from Greenskeeper (Sandpiper) and GolfPass (Soule Park, Olivas).</p>`;
+  h += `<p class="lede" style="margin-top:14px">${useCourse(c) ? 'Course handicap = index × slope ÷ 113 + (rating − par), rounded.' : 'Handicaps come straight from each index, as on the weekend sheet. Tees set the yardages.'} Scorecards from Greenskeeper (Sandpiper) and GolfPass (Soule Park, Olivas).</p>`;
   h += PH.setupEnd;
   return h;
 }
