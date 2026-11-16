@@ -137,6 +137,10 @@ details.strokes summary { color: var(--sky); font-weight: 600; cursor: pointer; 
 .groups { display: flex; gap: 6px; overflow-x: auto; padding: 10px 0 2px; scrollbar-width: none }
 .groups button { flex: 0 0 auto; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 8px 13px; font-size: 13px; font-weight: 600; white-space: nowrap }
 .groups button[aria-pressed="true"] { border-color: var(--sky); background: var(--sky); color: #fff }
+.groups.pick { flex-wrap: wrap; overflow: visible; padding-top: 0 }
+.meline { padding: 12px 0 2px; font-size: 14px; color: var(--muted) }
+.meline b { color: var(--ink) }
+.meline a { color: var(--sky-deep); font-weight: 600 }
 .hole { background: var(--surface); border-radius: var(--r); margin-top: 12px; overflow: hidden }
 /* hole header: a frame of sky over fairway, like last year's shots */
 .hhead { display: grid; grid-template-columns: 54px 1fr 54px; align-items: center; color: #fff;
@@ -851,6 +855,38 @@ const view = () => { const h = location.hash.replace('#', ''); return VIEWS.incl
 window.addEventListener('hashchange', () => { render(); window.scrollTo(0, 0); });
 const saveUi = () => LS.set('cc.ui.v1', S.ui);
 
+// ---- Who's holding this phone (honor system, no sign-in) ----
+S.me = LS.get('cc.me.v1', null);
+if (S.me && !PLAYERS.some(p => p.id === S.me)) S.me = null;
+function setMe(id) { S.me = id || null; LS.set('cc.me.v1', S.me); }
+function myGroup(W, round, me = S.me) {
+  if (!me) return -1;
+  if (round === 'fri') return TEAMS.findIndex(t => t.id === pTeam(me));
+  if (round === 'sat') return W.S.findIndex(m => m.a.includes(me) || m.b.includes(me));
+  return W.U.findIndex(g => g.a.includes(me) || g.b.includes(me));
+}
+function myGroupLabel(c, W, round, gi) { return round === 'fri' ? TEAMS[gi].name : groupLabels(c, W, round)[gi]; }
+function pickButtons() {
+  return TEAMS.map(t => `<div class="eyebrow" style="margin:14px 0 6px">${esc(t.name)}</div><div class="groups pick">` +
+    PLAYERS.filter(p => p.team === t.id).map(p => `<button data-act="me" data-v="${p.id}" aria-pressed="${S.me === p.id}">${esc(p.name)}</button>`).join('') + `</div>`).join('');
+}
+// ---- Friday: a hole's scores reach the board only once all three teams have finished it ----
+function friShown(sc) {
+  const has = (id, i) => { const v = sc['fri-' + id] && sc['fri-' + id]['h' + (i + 1)]; return typeof v === 'number' && v > 0; };
+  return ALL18.filter(i => PLAYERS.every(p => has(p.id, i)));
+}
+function friView(sc) {
+  const shown = new Set(friShown(sc).map(i => 'h' + (i + 1)));
+  const cards = new Set(PLAYERS.map(p => 'fri-' + p.id));
+  const out = {};
+  for (const [k, v] of Object.entries(sc)) {
+    if (!cards.has(k)) { out[k] = v; continue; }
+    out[k] = {};
+    for (const [hk, hv] of Object.entries(v || {})) if (!/^h\d+$/.test(hk) || shown.has(hk)) out[k][hk] = hv;
+  }
+  return out;
+}
+
 // ===== Render =====
 function render(opts = {}) {
   const v = view();
@@ -887,6 +923,7 @@ function strokeNote(recvIds, alloc, holesLabel) {
 }
 
 function renderBoard(c, sc) {
+  sc = friView(sc);
   const W = weekend(c, sc);
   const maxT = Math.max(...TEAMS.map(t => W.tot[t.id].total));
   const anyPts = maxT > 0;
@@ -909,7 +946,7 @@ function renderBoard(c, sc) {
   <div class="list"><table class="std"><thead><tr><th>Pos</th><th>Team</th><th class="r">Net</th><th class="r">Thru</th><th class="r">Pts</th></tr></thead><tbody>` +
     F.sorted.map(t => `<tr class="${TEAMCLS[t.id]}"><td class="num">${t.thru ? (t.tied ? 'T' : '') + t.pos : '–'}</td><td><span class="tname"><span class="chip-dot"></span>${t.name.replace('Team ', '')}</span></td>
       <td class="r big num ${t.thru && t.toPar < 0 ? 'under' : ''}">${t.thru ? toPar(t.toPar) : '–'}</td><td class="r num">${t.thru || '–'}</td><td class="r num">${t.thru ? fmtPts(t.pts) + (F.final ? '' : '*') : '–'}</td></tr>`).join('') +
-    `</tbody></table></div>${F.final ? '' : '<p class="lede" style="margin-top:6px">* Points lock in once all three teams finish 18.</p>'}
+    `</tbody></table></div>${F.final ? '' : '<p class="lede" style="margin-top:6px">* Points lock in once all three teams finish 18. A hole shows here once all three teams have finished it.</p>'}
   <details class="strokes"><summary>Friday strokes by player</summary><div class="sgrid">` +
     PLAYERS.map(p => { const a = F.alloc[p.id]; return `<div class="${TEAMCLS[p.team]}"><span><span class="chip-dot"></span>${p.name}</span><b class="num">${a.given}${a.capped ? '*' : ''}</b></div>`; }).join('') +
     `</div>${PLAYERS.some(p => F.alloc[p.id].capped) ? '<p class="lede">* Capped at one stroke per hole.</p>' : ''}</details>`;
@@ -1008,14 +1045,16 @@ function driveBlock(W, round, gi, h, sc) {
 }
 function renderScore(c, sc) {
   const W = weekend(c, sc);
-  const round = S.ui.round, gi = S.ui.group[round] || 0, h = S.ui.hole[round] || 0;
+  if (!S.me) return `<h2>Who are you?</h2><p class="lede">Pick your name once. This phone then keeps score for your group each day.</p>` + pickButtons();
+  const round = S.ui.round, gi = Math.max(0, myGroup(W, round)), h = S.ui.hole[round] || 0;
+  S.ui.group[round] = gi;
   const course = COURSES[round], tee = course.tees[c.tees[round]];
   const ents = entrants(c, W, round, gi);
   const par = course.par[h];
   const val = (k, hh) => { const v = sc[k] && sc[k]['h' + (hh + 1)]; return typeof v === 'number' && v > 0 ? v : null; };
   let out = `<div class="seg" role="group" aria-label="Round">` + ['fri', 'sat', 'sun'].map(r =>
     `<button data-act="round" data-v="${r}" aria-pressed="${r === round}">${COURSES[r].day}<small>${COURSES[r].name.replace(' Golf Club', '')}</small></button>`).join('') + `</div>`;
-  out += `<div class="groups">` + groupLabels(c, W, round).map((l, i) => `<button data-act="group" data-v="${i}" aria-pressed="${i === gi}">${esc(l)}</button>`).join('') + `</div>`;
+  out += `<div class="meline">Scoring for <b>${esc(myGroupLabel(c, W, round, gi))}</b> as ${esc(pName(S.me))}. <a href="#setup">Not you?</a></div>`;
   const doneHole = hh => ents.every(e => val(e.key, hh) !== null);
   out += `<section class="hole"><div class="hhead">
       <button data-act="hole" data-v="${h - 1}" ${h === 0 ? 'disabled' : ''} aria-label="Previous hole">‹</button>
@@ -1094,9 +1133,10 @@ function renderSetup(c) {
   let h = `<h2>Setup</h2>`;
   h += shared ? `<p class="lede">Changes here update everyone's phones and recalculate every stroke and match.</p>`
     : `<div class="note">This phone isn't connected to the shared scorecard right now${S.loading ? '' : ', so scores you enter save on this phone'}. You can send them from the bottom of this page.</div>`;
-  h += `<h2 style="font-size:22px">Keep score from any phone</h2><div class="note" style="margin-top:6px">Anyone with the link can enter scores, no sign-in, and every phone updates live. The tag at the top reads <b>Live</b> when a phone is connected.
+  h += `<h2 style="font-size:22px">Keep score from any phone</h2><div class="note" style="margin-top:6px">Each phone picks who is holding it, then keeps score only for that player's group that day. No sign-in, and every phone updates live. The tag at the top reads <b>Live</b> when a phone is connected.
     <ol><li>Open the link in Safari or Chrome.</li><li>Tap <b>Share</b>, then <b>Add to Home Screen</b>, to get the house icon like an app.</li></ol></div>`;
   h += PH.setupTop;
+  h += `<h2 style="font-size:22px">This phone</h2><p class="lede">${S.me ? `Keeping score as <b>${esc(pName(S.me))}</b>. Tap another name to switch.` : 'Pick who is holding this phone.'}</p>` + pickButtons();
   h += `<h2 style="font-size:22px">Rules</h2><div class="list rules">
     <div class="rule"><div class="eyebrow">Friday · Sandpiper</div><h3>Four-man shamble</h3><ul>
       <li>Entire team tees off, then the team chooses the best drive to use for the hole, and everyone plays their own ball in from there</li>
@@ -1181,11 +1221,19 @@ function renderSetup(c) {
 document.addEventListener('click', ev => {
   const el = ev.target.closest('[data-act]'); if (!el) return;
   const act = el.dataset.act, c = cfg(), round = S.ui.round;
+  if (act === 'me') { setMe(el.dataset.v); render(); return; }
   if (act === 'round') { S.ui.round = el.dataset.v; saveUi(); render(); return; }
   if (act === 'group') { S.ui.group[round] = +el.dataset.v; saveUi(); render(); return; }
   if (act === 'hole') { const v = Math.max(0, Math.min(17, +el.dataset.v)); S.ui.hole[round] = v; saveUi(); render(); if (el.closest('.card')) document.querySelector('.hole')?.scrollIntoView({ block: 'start', behavior: 'smooth' }); return; }
   const h = S.ui.hole[round] || 0, par = COURSES[round].par[h], sc = scores();
   const cur = k => { const v = sc[k] && sc[k]['h' + (h + 1)]; return typeof v === 'number' && v > 0 ? v : null; };
+  if (['inc', 'dec', 'clear', 'drive', 'fillpar'].includes(act)) {
+    const W0 = weekend(c, sc), g0 = myGroup(W0, round);
+    if (g0 < 0) return;
+    S.ui.group[round] = g0;
+    const mine = new Set([...entrants(c, W0, round, g0).map(e => e.key), ...driveSides(W0, round, g0).map(d => d.key)]);
+    if (act !== 'fillpar' && !mine.has(el.dataset.k)) return;
+  }
   if (act === 'inc' || act === 'dec') {
     const k = el.dataset.k, v = cur(k);
     let n = v === null ? par + (act === 'inc' ? 0 : -1) : v + (act === 'inc' ? 1 : -1);
