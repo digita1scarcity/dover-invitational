@@ -1180,10 +1180,10 @@ function renderWeather(c) {
       const rain = hs.length ? Math.max(...hs.map(o => o.p ?? 0)) : w.rainDay;
       const winds = hs.map(o => o.w).filter(v => v != null), gusts = hs.map(o => o.g).filter(v => v != null);
       const windTxt = winds.length ? `${Math.round(Math.min(...winds))}${Math.round(Math.min(...winds)) !== Math.round(Math.max(...winds)) ? '–' + Math.round(Math.max(...winds)) : ''} mph ${compass(hs)}` : '–';
-      facts = `<div><span>Sky</span>${esc(WMO[w.code] || '–')}</div>
+      facts = `<div><span>All day</span>${esc(WMO[w.code] || '–')}</div>
         <div><span>At first tee ${TEE_START[r]}</span>${first ? `${Math.round(first.t)}°, ${esc(WMO[first.c] || '')}` : '–'}</div>
         <div><span>Rain chance, round</span>${rain ?? '–'}%</div>
-        <div><span>Wind, round</span>${windTxt}${gusts.length ? `<br><small>gusts to ${Math.round(Math.max(...gusts))}</small>` : ''}</div>`;
+        <div><span>Wind, round</span>${windTxt}${gusts.length && Math.round(Math.max(...gusts)) > Math.round(Math.max(...winds)) ? `<br><small>gusts to ${Math.round(Math.max(...gusts))}</small>` : ''}</div>`;
       if (hs.length) facts += `<div class="hrs">` + hs.map(o => `<div><b>${hourLabel(o.h)}</b><i class="num">${Math.round(o.t)}°</i><em>${o.p ?? 0}%</em></div>`).join('') + `</div>`;
     } else {
       facts = `<div style="grid-column:1/-1;color:var(--muted)">${wxBusy ? 'Loading the forecast…' : S.wxErr ? "Couldn't load the forecast on this phone right now. The NWS link below has it." : 'Forecast not out yet for this day.'}</div>`;
