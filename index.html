@@ -227,7 +227,7 @@ textarea { width: 100%; min-height: 80px; border: 1px solid var(--edge); border-
 .wxi .i-fog line { stroke: var(--muted); stroke-width: 2; stroke-linecap: round }
 .wxi .i-bolt { fill: #e3a72f; stroke: none }
 .wx .temps .wxi { margin-right: 4px; position: relative; top: -4px }
-.wx .facts .tee-wx { display: inline-flex; align-items: center; gap: 4px }
+.wx .facts .tee-wx { display: inline-flex; align-items: center; gap: 4px; font: inherit; color: inherit; text-transform: none; letter-spacing: normal }
 .wx a, .lede a, .note a { color: var(--sky); font-weight: 600 }
 /* tab bar */
 nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--surface); border-top: 1px solid var(--line);
@@ -1129,6 +1129,48 @@ const TEE_START = { fri: '9:20', sat: '11:00', sun: '9:00' };
 S.wx = LS.get('cc.wx.v2', null);
 S.wxErr = false;
 let wxBusy = false, wxTried = 0;
+async function wxFetch(url) {
+  const ac = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const tm = ac ? setTimeout(() => ac.abort(), 9000) : 0;
+  try {
+    const res = await fetch(url, ac ? { signal: ac.signal, headers: { Accept: 'application/geo+json, application/json' } } : undefined);
+    if (!res.ok) throw new Error(url.split('?')[0] + ' ' + res.status);
+    return res;
+  } finally { clearTimeout(tm); }
+}
+function nwsCode(s) {
+  s = (s || '').toLowerCase();
+  if (/thunder|t-storm/.test(s)) return 95;
+  if (/snow|flurr/.test(s)) return 73;
+  if (/sleet|freezing/.test(s)) return 66;
+  if (/drizzle/.test(s)) return 53;
+  if (/rain|shower/.test(s)) return /light|slight|chance/.test(s) ? 61 : 63;
+  if (/fog|haze|smoke/.test(s)) return 45;
+  if (/mostly sunny|mostly clear/.test(s)) return 1;
+  if (/partly/.test(s)) return 2;
+  if (/cloudy|overcast/.test(s)) return 3;
+  if (/sunny|clear|fair/.test(s)) return 0;
+  return 3;
+}
+const NWS_DIR = { N: 0, NNE: 22.5, NE: 45, ENE: 67.5, E: 90, ESE: 112.5, SE: 135, SSE: 157.5, S: 180, SSW: 202.5, SW: 225, WSW: 247.5, W: 270, WNW: 292.5, NW: 315, NNW: 337.5 };
+async function nwsDay(r, co, tee) {
+  const key = 'cc.nws.v1.' + r;
+  let hourlyUrl = LS.get(key, null);
+  if (!hourlyUrl) {
+    const pt = await (await wxFetch(`https://api.weather.gov/points/${co.lat},${co.lon}`)).json();
+    hourlyUrl = pt && pt.properties && pt.properties.forecastHourly;
+    if (!hourlyUrl || !/^https:\/\/api\.weather\.gov\//.test(hourlyUrl)) return null;
+    LS.set(key, hourlyUrl);
+  }
+  const j = await (await wxFetch(hourlyUrl)).json();
+  const ps = ((j && j.properties && j.properties.periods) || []).filter(p => (p.startTime || '').slice(0, 10) === co.date);
+  if (!ps.length) return null;
+  const all = ps.map(p => ({ h: +p.startTime.slice(11, 13), t: p.temperature, p: (p.probabilityOfPrecipitation && p.probabilityOfPrecipitation.value) || 0, c: nwsCode(p.shortForecast), w: Math.max(0, ...String(p.windSpeed || '').match(/\d+/g)?.map(Number) || [0]), g: null, dir: NWS_DIR[p.windDirection] ?? null }));
+  const temps = all.map(o => o.t).filter(v => v != null);
+  const start = +tee.split(':')[0];
+  const day = all.filter(o => o.h >= 7 && o.h <= 17);
+  return { hi: Math.max(...temps), lo: Math.min(...temps), code: Math.max(...(day.length ? day : all).map(o => o.c)), rainDay: Math.max(...all.map(o => o.p)), hours: all.filter(o => o.h >= start && o.h <= start + 4), src: 'nws' };
+}
 async function loadWx(force) {
   if (wxBusy) return;
   if (!force && S.wx && Date.now() - S.wx.at < 30 * 60 * 1000) return;
@@ -1145,9 +1187,15 @@ async function loadWx(force) {
         hourly: 'temperature_2m,precipitation_probability,weather_code,wind_speed_10m,wind_gusts_10m,wind_direction_10m',
         temperature_unit: 'fahrenheit', wind_speed_unit: 'mph',
       });
-      const res = await fetch('https://api.open-meteo.com/v1/forecast?' + q);
-      if (!res.ok) throw new Error('forecast ' + res.status);
-      days[r] = wxSummary(await res.json(), TEE_START[r]);
+      let d = null;
+      try {
+        const res = await wxFetch('https://api.open-meteo.com/v1/forecast?' + q);
+        d = wxSummary(await res.json(), TEE_START[r]);
+        if (d) d.src = 'om';
+      } catch (e) { console.warn('Open-Meteo unavailable', e); }
+      if (!d) { try { d = await nwsDay(r, co, TEE_START[r]); } catch (e) { console.warn('NWS unavailable', e); } }
+      if (!d) throw new Error('no forecast for ' + r);
+      days[r] = d;
     }));
     S.wx = { at: Date.now(), days }; S.wxErr = false; LS.set('cc.wx.v2', S.wx);
   } catch (e) { console.warn('Forecast unavailable', e); S.wxErr = true; }
@@ -1206,6 +1254,10 @@ function agoText(ms) {
   if (h < 24) return `${h} hr ago`;
   return new Date(ms).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
+function wxSources() {
+  const s = new Set(Object.values((S.wx && S.wx.days) || {}).map(d => d && d.src === 'nws' ? 'the National Weather Service' : 'Open-Meteo'));
+  return [...s].join(' and ') || 'Open-Meteo';
+}
 function renderWeather(c) {
   loadWx();
   const days = (S.wx && S.wx.days) || {};
@@ -1236,7 +1288,7 @@ function renderWeather(c) {
       </div>
       <p style="margin:12px 0 0"><a href="https://forecast.weather.gov/MapClick.php?lat=${co.lat}&lon=${co.lon}" target="_blank" rel="noopener">NWS forecast for ${co.name.replace(' Golf Club', '')} ↗</a></p></div></div>`;
   }
-  h += `<p class="lede" style="margin-top:10px">${S.wx ? `Forecast from Open-Meteo, updated ${agoText(S.wx.at)}${S.wxErr ? ", couldn't refresh just now" : ''}. ` : ''}<button class="btn" data-act="wxrefresh" ${wxBusy ? 'disabled' : ''}>${wxBusy ? 'Updating…' : 'Update forecast'}</button></p>`;
+  h += `<p class="lede" style="margin-top:10px">${S.wx ? `Forecast from ${wxSources()}, updated ${agoText(S.wx.at)}${S.wxErr ? ", couldn't refresh just now" : ''}. ` : ''}<button class="btn" data-act="wxrefresh" ${wxBusy ? 'disabled' : ''}>${wxBusy ? 'Updating…' : 'Update forecast'}</button></p>`;
   return h;
 }
 
