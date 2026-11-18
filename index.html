@@ -216,6 +216,18 @@ textarea { width: 100%; min-height: 80px; border: 1px solid var(--edge); border-
 .wx .hrs b { font-family: var(--f-mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600 }
 .wx .hrs i { font-style: normal; font-size: 17px; font-weight: 600 }
 .wx .hrs em { font-style: normal; font-size: 11px; color: var(--sky-deep) }
+.wx .hrs div { align-items: center }
+.wxi { display: inline-block; vertical-align: middle; flex: none; overflow: visible }
+.wxi .i-sun circle { fill: #e3a72f; stroke: none }
+.wxi .i-sun line { stroke: #e3a72f; stroke-width: 2; stroke-linecap: round }
+.wxi .i-cloud { fill: var(--surface); stroke: var(--muted); stroke-width: 1.6; stroke-linejoin: round }
+.wxi .i-cloud.dk { fill: var(--sunk) }
+.wxi .i-rain line { stroke: #3f7cad; stroke-width: 2; stroke-linecap: round }
+.wxi .i-rain circle { fill: #3f7cad }
+.wxi .i-fog line { stroke: var(--muted); stroke-width: 2; stroke-linecap: round }
+.wxi .i-bolt { fill: #e3a72f; stroke: none }
+.wx .temps .wxi { margin-right: 4px; position: relative; top: -4px }
+.wx .facts .tee-wx { display: inline-flex; align-items: center; gap: 4px }
 .wx a, .lede a, .note a { color: var(--sky); font-weight: 600 }
 /* tab bar */
 nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--surface); border-top: 1px solid var(--line);
@@ -1150,6 +1162,35 @@ function wxSummary(j, tee) {
     .filter(x => x.h >= start && x.h <= start + 4 && x.t != null);
   return { hi: d.temperature_2m_max[0], lo: d.temperature_2m_min[0], code: d.weather_code[0], rainDay: d.precipitation_probability_max[0], hours };
 }
+function wxKind(c) {
+  if (c == null) return 'cloud';
+  if (c === 0) return 'sun';
+  if (c === 1) return 'mostly';
+  if (c === 2) return 'partly';
+  if (c === 3) return 'cloud';
+  if (c === 45 || c === 48) return 'fog';
+  if (c >= 95) return 'storm';
+  if ((c >= 71 && c <= 77) || c === 85 || c === 86) return 'snow';
+  if (c >= 51 && c <= 57) return 'drizzle';
+  return 'rain';
+}
+function wxIcon(c, size) {
+  const k = wxKind(c), s = size || 28;
+  const sun = (cx, cy, r) => `<g class="i-sun"><circle cx="${cx}" cy="${cy}" r="${r}"/>${[0, 45, 90, 135, 180, 225, 270, 315].map(a => { const q = a * Math.PI / 180, r1 = r + 2.5, r2 = r + 5.5; return `<line x1="${(cx + Math.cos(q) * r1).toFixed(1)}" y1="${(cy + Math.sin(q) * r1).toFixed(1)}" x2="${(cx + Math.cos(q) * r2).toFixed(1)}" y2="${(cy + Math.sin(q) * r2).toFixed(1)}"/>`; }).join('')}</g>`;
+  const cloud = (dx, dy, cls) => `<path class="${cls || 'i-cloud'}" transform="translate(${dx} ${dy})" d="M9 26h15a6 6 0 0 0 .6-12A8 8 0 0 0 9.3 16.2 5 5 0 0 0 9 26z"/>`;
+  const drops = n => `<g class="i-rain">${[10, 16, 22].slice(0, n).map(x => `<line x1="${x}" y1="28" x2="${x - 2}" y2="32"/>`).join('')}</g>`;
+  let body;
+  if (k === 'sun') body = sun(16, 16, 6);
+  else if (k === 'mostly') body = sun(13, 13, 5.5) + cloud(5, 4);
+  else if (k === 'partly') body = sun(12, 12, 5.5) + cloud(2, 1);
+  else if (k === 'cloud') body = cloud(-2, -3, 'i-cloud dk');
+  else if (k === 'fog') body = `<g class="i-fog"><line x1="5" y1="12" x2="27" y2="12"/><line x1="3" y1="18" x2="25" y2="18"/><line x1="7" y1="24" x2="29" y2="24"/></g>`;
+  else if (k === 'drizzle') body = cloud(-2, -6, 'i-cloud dk') + drops(2);
+  else if (k === 'rain') body = cloud(-2, -6, 'i-cloud dk') + drops(3);
+  else if (k === 'snow') body = cloud(-2, -6, 'i-cloud dk') + `<g class="i-rain">${[10, 16, 22].map(x => `<circle cx="${x}" cy="30" r="1.3"/>`).join('')}</g>`;
+  else body = cloud(-2, -6, 'i-cloud dk') + `<path class="i-bolt" d="M17 21l-4 6h3l-2 5 5-7h-3l2-4z"/>`;
+  return `<svg class="wxi" width="${s}" height="${s}" viewBox="0 0 32 34" role="img" aria-label="${esc(WMO[c] || 'Forecast')}"><title>${esc(WMO[c] || '')}</title>${body}</svg>`;
+}
 const hourLabel = h => `${h % 12 || 12}${h < 12 ? 'am' : 'pm'}`;
 function compass(hours) {
   let x = 0, y = 0; hours.forEach(o => { if (o.dir != null) { x += Math.sin(o.dir * Math.PI / 180) * (o.w || 1); y += Math.cos(o.dir * Math.PI / 180) * (o.w || 1); } });
@@ -1181,15 +1222,15 @@ function renderWeather(c) {
       const winds = hs.map(o => o.w).filter(v => v != null), gusts = hs.map(o => o.g).filter(v => v != null);
       const windTxt = winds.length ? `${Math.round(Math.min(...winds))}${Math.round(Math.min(...winds)) !== Math.round(Math.max(...winds)) ? '–' + Math.round(Math.max(...winds)) : ''} mph ${compass(hs)}` : '–';
       facts = `<div><span>All day</span>${esc(WMO[w.code] || '–')}</div>
-        <div><span>At first tee ${TEE_START[r]}</span>${first ? `${Math.round(first.t)}°, ${esc(WMO[first.c] || '')}` : '–'}</div>
+        <div><span>At first tee ${TEE_START[r]}</span>${first ? `<span class="tee-wx">${wxIcon(first.c, 20)}${Math.round(first.t)}°, ${esc(WMO[first.c] || '')}</span>` : '–'}</div>
         <div><span>Rain chance, round</span>${rain ?? '–'}%</div>
         <div><span>Wind, round</span>${windTxt}${gusts.length && Math.round(Math.max(...gusts)) > Math.round(Math.max(...winds)) ? `<br><small>gusts to ${Math.round(Math.max(...gusts))}</small>` : ''}</div>`;
-      if (hs.length) facts += `<div class="hrs">` + hs.map(o => `<div><b>${hourLabel(o.h)}</b><i class="num">${Math.round(o.t)}°</i><em>${o.p ?? 0}%</em></div>`).join('') + `</div>`;
+      if (hs.length) facts += `<div class="hrs">` + hs.map(o => `<div><b>${hourLabel(o.h)}</b>${wxIcon(o.c, 30)}<i class="num">${Math.round(o.t)}°</i><em>${o.p ?? 0}%</em></div>`).join('') + `</div>`;
     } else {
       facts = `<div style="grid-column:1/-1;color:var(--muted)">${wxBusy ? 'Loading the forecast…' : S.wxErr ? "Couldn't load the forecast on this phone right now. The NWS link below has it." : 'Forecast not out yet for this day.'}</div>`;
     }
     h += `<div class="wx">${PH["wx_" + r]}<div class="body"><div class="d"><div><div class="eyebrow">${dstr} · ${co.town}</div><h3>${co.name}</h3></div>
-      ${w ? `<div class="temps num">${Math.round(w.hi)}° <span style="color:var(--muted);font-size:28px">${Math.round(w.lo)}°</span></div>` : ''}</div>
+      ${w ? `<div class="temps num">${wxIcon(w.code, 40)} ${Math.round(w.hi)}° <span style="color:var(--muted);font-size:28px">${Math.round(w.lo)}°</span></div>` : ''}</div>
       <div class="facts">${facts}
         <div><span>Tees</span>${esc(c.tees[r])} · ${t.y.reduce((a, b) => a + b, 0)} yds</div><div><span>Rating / slope</span>${t.r} / ${t.s}</div><div><span>Format</span>${co.format}</div>
       </div>
