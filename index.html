@@ -1140,6 +1140,7 @@ async function wxFetch(url) {
 }
 function nwsCode(s) {
   s = (s || '').toLowerCase();
+  if (/slight chance|isolated/.test(s) && /rain|shower|drizzle/.test(s)) return 3;
   if (/thunder|t-storm/.test(s)) return 95;
   if (/snow|flurr/.test(s)) return 73;
   if (/sleet|freezing/.test(s)) return 66;
