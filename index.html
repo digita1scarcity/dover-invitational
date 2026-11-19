@@ -450,7 +450,7 @@ const DEFAULT_CONFIG = {
   capOne: true,
   fri: { pct: 50, bestN: 2, pts: [2, 1, 0] },
   sat: { low: 20, high: 40 },
-  sun: { pct: 100, swap: false, singles: ['auto', 'auto', 'auto'] },
+  sun: { pct: 100, singles: ['straight', 'straight', 'straight'], v18: true },
   matchPts: { win: 1, halve: 0.5 },
 };
 
@@ -463,6 +463,8 @@ function mergeConfig(stored) {
   // Nov 16 sheet: indexes still at the old defaults move to the sheet's numbers
   const OLD_IDX = { dan: 11, josh: 15.6, sivan: 36 };
   if (stored.idx) for (const [k, v] of Object.entries(OLD_IDX)) if (stored.idx[k] === v) delete stored.idx[k];
+  // Nov 18 groups: Sunday groups are fixed and singles default to the listed order (Josh v Dan). Drop settings saved for the old groups.
+  if (stored.sun) { delete stored.sun.swap; if (!stored.sun.v18) delete stored.sun.singles; }
   for (const k of Object.keys(c)) {
     if (stored[k] === undefined) continue;
     if (c[k] && typeof c[k] === 'object' && !Array.isArray(c[k])) Object.assign(c[k], stored[k]);
@@ -534,15 +536,15 @@ function matchStatus(results, holes) {
 // ---- pairings ----
 const SAT_MATCHES = [
   { a: ['dan', 'sivan'], b: ['jeremy', 'david'] },
-  { a: ['micah', 'fasky'], b: ['greg', 'josh'] },
-  { a: ['daniel', 'kyle'], b: ['fromer', 'nolan'] },
+  { a: ['micah', 'fasky'], b: ['fromer', 'josh'] },
+  { a: ['daniel', 'kyle'], b: ['greg', 'nolan'] },
 ];
+// Nov 18 (Josh): Josh and Nolan v Dan and Micah, Josh v Dan; Fromer and Greg take Daniel and Jeremy.
 function sunGroups(cfg) {
-  const [x, y] = cfg.sun.swap ? ['fasky', 'micah'] : ['micah', 'fasky'];
   return [
-    { a: ['dan', x], b: ['fromer', 'josh'] },
-    { a: [y, 'sivan'], b: ['kyle', 'david'] },
-    { a: ['daniel', 'jeremy'], b: ['greg', 'nolan'] },
+    { a: ['dan', 'micah'], b: ['josh', 'nolan'] },
+    { a: ['fasky', 'sivan'], b: ['kyle', 'david'] },
+    { a: ['daniel', 'jeremy'], b: ['fromer', 'greg'] },
   ];
 }
 // Singles within a group: auto = closest course handicaps; 'straight' = 1v1,2v2; 'crossed' = 1v2,2v1
@@ -1362,7 +1364,7 @@ function renderSetup(c) {
   </div>`;
   const groups = sunGroups(c);
   h += `<h2 style="font-size:22px">Sunday pairings</h2><div class="form">
-    <div class="f"><label for="swap">Micah and Fasky<span class="hint">Who plays with Dan in group 1</span></label><select id="swap" data-cfg="sun.swap"><option value="0" ${!c.sun.swap ? 'selected' : ''}>Micah with Dan</option><option value="1" ${c.sun.swap ? 'selected' : ''}>Fasky with Dan</option></select></div>` +
+    ` +
     groups.map((g, gi) => {
       const sp = singlesFor(c, gi).pairs.map(([a, b]) => `${pName(a)} v ${pName(b)}`).join(', ');
       return `<div class="f"><label for="sg${gi}">Group ${gi + 1} singles<span class="hint">${sp}</span></label><select id="sg${gi}" data-cfg="sun.singles.${gi}">
