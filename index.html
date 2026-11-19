@@ -211,6 +211,7 @@ textarea { width: 100%; min-height: 80px; border: 1px solid var(--edge); border-
 .wx .facts { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px 14px; margin-top: 12px; font-size: 13.5px }
 .wx .facts span { color: var(--muted); display: block; font-family: var(--f-mono); font-size: 10px; text-transform: uppercase; letter-spacing: .1em }
 .wx .facts small { color: var(--muted); font-size: 12px }
+.wx .hrs small.fl { font-size: 11px; line-height: 1.1 }
 .wx .hrs { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; padding: 8px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line) }
 .wx .hrs div { text-align: center; display: flex; flex-direction: column; gap: 2px }
 .wx .hrs b { font-family: var(--f-mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600 }
@@ -1128,7 +1129,7 @@ function renderScore(c, sc) {
 // ---- Weather: live forecast from Open-Meteo (no key), fetched by this phone ----
 const WMO = { 0: 'Clear', 1: 'Mostly clear', 2: 'Partly cloudy', 3: 'Overcast', 45: 'Fog', 48: 'Freezing fog', 51: 'Light drizzle', 53: 'Drizzle', 55: 'Heavy drizzle', 56: 'Freezing drizzle', 57: 'Freezing drizzle', 61: 'Light rain', 63: 'Rain', 65: 'Heavy rain', 66: 'Freezing rain', 67: 'Freezing rain', 71: 'Light snow', 73: 'Snow', 75: 'Heavy snow', 77: 'Snow grains', 80: 'Light showers', 81: 'Showers', 82: 'Heavy showers', 85: 'Snow showers', 86: 'Snow showers', 95: 'Thunderstorms', 96: 'Thunderstorms, hail', 99: 'Thunderstorms, hail' };
 const TEE_START = { fri: '9:20', sat: '11:00', sun: '9:00' };
-S.wx = LS.get('cc.wx.v2', null);
+S.wx = LS.get('cc.wx.v3', null);
 S.wxErr = false;
 let wxBusy = false, wxTried = 0;
 async function wxFetch(url) {
@@ -1156,6 +1157,15 @@ function nwsCode(s) {
   return 3;
 }
 const NWS_DIR = { N: 0, NNE: 22.5, NE: 45, ENE: 67.5, E: 90, ESE: 112.5, SE: 135, SSE: 157.5, S: 180, SSW: 202.5, SW: 225, WSW: 247.5, W: 270, WNW: 292.5, NW: 315, NNW: 337.5 };
+function feelsF(T, mph, rh) {
+  if (T == null) return null;
+  if (T <= 50 && mph >= 3) return 35.74 + 0.6215 * T - 35.75 * Math.pow(mph, 0.16) + 0.4275 * T * Math.pow(mph, 0.16);
+  if (T >= 80 && rh != null) {
+    const R = rh;
+    return -42.379 + 2.04901523 * T + 10.14333127 * R - 0.22475541 * T * R - 0.00683783 * T * T - 0.05481717 * R * R + 0.00122874 * T * T * R + 0.00085282 * T * R * R - 0.00000199 * T * T * R * R;
+  }
+  return T;
+}
 async function nwsDay(r, co, tee) {
   const key = 'cc.nws.v1.' + r;
   let hourlyUrl = LS.get(key, null);
@@ -1168,7 +1178,8 @@ async function nwsDay(r, co, tee) {
   const j = await (await wxFetch(hourlyUrl)).json();
   const ps = ((j && j.properties && j.properties.periods) || []).filter(p => (p.startTime || '').slice(0, 10) === co.date);
   if (!ps.length) return null;
-  const all = ps.map(p => ({ h: +p.startTime.slice(11, 13), t: p.temperature, p: (p.probabilityOfPrecipitation && p.probabilityOfPrecipitation.value) || 0, c: nwsCode(p.shortForecast), w: Math.max(0, ...String(p.windSpeed || '').match(/\d+/g)?.map(Number) || [0]), g: null, dir: NWS_DIR[p.windDirection] ?? null }));
+  const all = ps.map(p => ({ h: +p.startTime.slice(11, 13), rh: p.relativeHumidity && p.relativeHumidity.value, t: p.temperature, p: (p.probabilityOfPrecipitation && p.probabilityOfPrecipitation.value) || 0, c: nwsCode(p.shortForecast), w: Math.max(0, ...String(p.windSpeed || '').match(/\d+/g)?.map(Number) || [0]), g: null, dir: NWS_DIR[p.windDirection] ?? null }));
+  all.forEach(o => { o.f = feelsF(o.t, o.w, o.rh); });
   const temps = all.map(o => o.t).filter(v => v != null);
   const start = +tee.split(':')[0];
   const day = all.filter(o => o.h >= 7 && o.h <= 17);
@@ -1187,7 +1198,7 @@ async function loadWx(force) {
       const q = new URLSearchParams({
         latitude: co.lat, longitude: co.lon, start_date: co.date, end_date: co.date, timezone: 'America/Los_Angeles',
         daily: 'temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max',
-        hourly: 'temperature_2m,precipitation_probability,weather_code,wind_speed_10m,wind_gusts_10m,wind_direction_10m',
+        hourly: 'temperature_2m,apparent_temperature,precipitation_probability,weather_code,wind_speed_10m,wind_gusts_10m,wind_direction_10m',
         temperature_unit: 'fahrenheit', wind_speed_unit: 'mph',
       });
       let d = null;
@@ -1200,7 +1211,7 @@ async function loadWx(force) {
       if (!d) throw new Error('no forecast for ' + r);
       days[r] = d;
     }));
-    S.wx = { at: Date.now(), days }; S.wxErr = false; LS.set('cc.wx.v2', S.wx);
+    S.wx = { at: Date.now(), days }; S.wxErr = false; LS.set('cc.wx.v3', S.wx);
   } catch (e) { console.warn('Forecast unavailable', e); S.wxErr = true; }
   wxBusy = false;
   if (view() === 'weather') render();
@@ -1209,7 +1220,7 @@ function wxSummary(j, tee) {
   const d = j && j.daily, hr = j && j.hourly;
   if (!d || !d.time || !d.time.length || d.temperature_2m_max[0] == null) return null;
   const start = +tee.split(':')[0];
-  const hours = (hr && hr.time || []).map((tm, i) => ({ h: +tm.slice(11, 13), t: hr.temperature_2m[i], p: hr.precipitation_probability[i], c: hr.weather_code[i], w: hr.wind_speed_10m[i], g: hr.wind_gusts_10m[i], dir: hr.wind_direction_10m[i] }))
+  const hours = (hr && hr.time || []).map((tm, i) => ({ h: +tm.slice(11, 13), t: hr.temperature_2m[i], f: hr.apparent_temperature ? hr.apparent_temperature[i] : null, p: hr.precipitation_probability[i], c: hr.weather_code[i], w: hr.wind_speed_10m[i], g: hr.wind_gusts_10m[i], dir: hr.wind_direction_10m[i] }))
     .filter(x => x.h >= start && x.h <= start + 4 && x.t != null);
   return { hi: d.temperature_2m_max[0], lo: d.temperature_2m_min[0], code: d.weather_code[0], rainDay: d.precipitation_probability_max[0], hours };
 }
@@ -1277,10 +1288,11 @@ function renderWeather(c) {
       const winds = hs.map(o => o.w).filter(v => v != null), gusts = hs.map(o => o.g).filter(v => v != null);
       const windTxt = winds.length ? `${Math.round(Math.min(...winds))}${Math.round(Math.min(...winds)) !== Math.round(Math.max(...winds)) ? '–' + Math.round(Math.max(...winds)) : ''} mph ${compass(hs)}` : '–';
       facts = `<div><span>All day</span>${esc(WMO[w.code] || '–')}</div>
-        <div><span>At first tee ${TEE_START[r]}</span>${first ? `<span class="tee-wx">${wxIcon(first.c, 20)}${Math.round(first.t)}°, ${esc(WMO[first.c] || '')}</span>` : '–'}</div>
+        <div><span>At first tee ${TEE_START[r]}</span>${first ? `<span class="tee-wx">${wxIcon(first.c, 20)}${Math.round(first.t)}°, ${esc(WMO[first.c] || '')}</span>${first.f != null ? `<br><small>Feels like ${Math.round(first.f)}°</small>` : ''}` : '–'}</div>
+        ${(() => { const fs = hs.map(o => o.f).filter(v => v != null).map(Math.round); if (!fs.length) return ''; const lo = Math.min(...fs), hi = Math.max(...fs); return `<div><span>Feels like, round</span>${lo === hi ? lo : lo + '–' + hi}°</div>`; })()}
         <div><span>Rain chance, round</span>${rain ?? '–'}%</div>
         <div><span>Wind, round</span>${windTxt}${gusts.length && Math.round(Math.max(...gusts)) > Math.round(Math.max(...winds)) ? `<br><small>gusts to ${Math.round(Math.max(...gusts))}</small>` : ''}</div>`;
-      if (hs.length) facts += `<div class="hrs">` + hs.map(o => `<div><b>${hourLabel(o.h)}</b>${wxIcon(o.c, 30)}<i class="num">${Math.round(o.t)}°</i><em>${o.p ?? 0}%</em></div>`).join('') + `</div>`;
+      if (hs.length) facts += `<div class="hrs">` + hs.map(o => `<div><b>${hourLabel(o.h)}</b>${wxIcon(o.c, 30)}<i class="num">${Math.round(o.t)}°</i>${o.f != null ? `<small class="fl">feels ${Math.round(o.f)}°</small>` : ''}<em>${o.p ?? 0}%</em></div>`).join('') + `</div>`;
     } else {
       facts = `<div style="grid-column:1/-1;color:var(--muted)">${wxBusy ? 'Loading the forecast…' : S.wxErr ? "Couldn't load the forecast on this phone right now. The NWS link below has it." : 'Forecast not out yet for this day.'}</div>`;
     }
