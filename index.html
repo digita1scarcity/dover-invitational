@@ -449,10 +449,11 @@ const DEFAULT_CONFIG = {
   idx: Object.fromEntries(PLAYERS.map(p => [p.id, p.idx])),
   tees: { fri: 'Silver', sat: 'Avocado', sun: 'Club', useCourse: true },
   capOne: true,
-  fri: { pct: 50, bestN: 2, pts: [2, 1, 0] },
+  fri: { pct: 50, bestN: 2, pts: [6, 3, 0] },
   sat: { low: 20, high: 40 },
   sun: { pct: 100, singles: ['straight', 'straight', 'straight'], v18: true },
-  matchPts: { win: 1, halve: 0.5 },
+  // Nov 20: 30/30/40 split. A halved match is worth half.
+  matchPts: { sat: 3, front: 2, single: 1, v30: true },
 };
 
 function mergeConfig(stored) {
@@ -466,6 +467,8 @@ function mergeConfig(stored) {
   if (stored.idx) for (const [k, v] of Object.entries(OLD_IDX)) if (stored.idx[k] === v) delete stored.idx[k];
   // Nov 18 groups: Sunday groups are fixed and singles default to the listed order (Josh v Dan). Drop settings saved for the old groups.
   if (stored.sun) { delete stored.sun.swap; if (!stored.sun.v18) delete stored.sun.singles; }
+  // Nov 20 points: Friday 6/3/0, Saturday matches 3, Sunday front 9 2 and singles 1 (30/30/40). Drop points saved before then.
+  if (!(stored.matchPts && stored.matchPts.v30)) { delete stored.matchPts; if (stored.fri) delete stored.fri.pts; }
   for (const k of Object.keys(c)) {
     if (stored[k] === undefined) continue;
     if (c[k] && typeof c[k] === 'object' && !Array.isArray(c[k])) Object.assign(c[k], stored[k]);
@@ -687,8 +690,8 @@ function weekend(cfg, scores) {
     if (F.final) tot[t.id].fri = t.pts;
     if (t.thru > 0) tot[t.id].live += F.final ? 0 : t.pts;
   }
-  const W = cfg.matchPts.win, Hv = cfg.matchPts.halve;
-  const addMatch = (day, ta, tb, st) => {
+  const addMatch = (day, ta, tb, st, W) => {
+    const Hv = W / 2;
     if (st.final) {
       if (st.winner === 'A') tot[ta][day] += W; else if (st.winner === 'B') tot[tb][day] += W;
       else { tot[ta][day] += Hv; tot[tb][day] += Hv; }
@@ -697,10 +700,10 @@ function weekend(cfg, scores) {
       else { tot[ta].live += Hv; tot[tb].live += Hv; }
     }
   };
-  for (const m of S) addMatch('sat', m.ta, m.tb, m.status);
+  for (const m of S) addMatch('sat', m.ta, m.tb, m.status, cfg.matchPts.sat);
   for (const g of U) {
-    addMatch('sun', g.ta, g.tb, g.front.status);
-    for (const s of g.singles) addMatch('sun', s.ta, s.tb, s.status);
+    addMatch('sun', g.ta, g.tb, g.front.status, cfg.matchPts.front);
+    for (const s of g.singles) addMatch('sun', s.ta, s.tb, s.status, cfg.matchPts.single);
   }
   for (const t of TEAMS) { const x = tot[t.id]; x.total = x.fri + x.sat + x.sun; x.proj = x.total + x.live; }
   return { F, S, U, tot };
@@ -948,7 +951,7 @@ function renderBoard(c, sc) {
   const W = weekend(c, sc);
   const maxT = Math.max(...TEAMS.map(t => W.tot[t.id].total));
   const anyPts = maxT > 0;
-  const possible = c.fri.pts.reduce((a, b) => a + b, 0) + 3 * c.matchPts.win + 9 * c.matchPts.win;
+  const possible = c.fri.pts.reduce((a, b) => a + b, 0) + 3 * c.matchPts.sat + 3 * c.matchPts.front + 6 * c.matchPts.single;
   let h = `<div class="ribbon">November 20–22 · Goleta · Ojai · Ventura</div><section class="hero"><div class="mast"><div class="the">The</div><div class="nm" role="heading" aria-level="1">DOVER<br>INVITATIONAL</div><div class="yr">MMXXVI</div></div><div class="arch">${HOUSE}</div><p class="motto">Fifty-four holes. Three courses. Twelve players.</p></section>`;
   const ranked = [...TEAMS].sort((a, b) => W.tot[b.id].total - W.tot[a.id].total);
   const posOf = id => { const v = W.tot[id].total; const ahead = TEAMS.filter(x => W.tot[x.id].total > v).length; const tied = TEAMS.filter(x => W.tot[x.id].total === v).length > 1; return (tied ? 'T' : '') + (ahead + 1); };
@@ -958,7 +961,7 @@ function renderBoard(c, sc) {
     <thead><tr><th>POS</th><th class="nm">TEAM</th><th>FRI</th><th>SAT</th><th>SUN</th><th>TOT</th></tr></thead><tbody>` +
     ranked.map(t => { const x = W.tot[t.id]; return `<tr class="${TEAMCLS[t.id]}"><td>${anyPts ? posOf(t.id) : '–'}</td><td class="nm">${t.name.replace('Team ', '')}</td><td>${dayCell(x, 'fri')}</td><td>${dayCell(x, 'sat')}</td><td>${dayCell(x, 'sun')}</td><td class="tot ${x.total ? '' : 'zero'}">${fmtPts(x.total)}</td></tr>`; }).join('') +
     `</tbody></table><div class="bfoot">` + (anyLive ? `If it ended now: ` + ranked.map(t => `<b>${t.name.replace('Team ', '')} ${fmtPts(W.tot[t.id].proj)}</b>`).join(' · ') + `<br>` : '') +
-    `${fmtPts(possible)} points on the line</div></div><div class="onLine">Friday ${fmtPts(c.fri.pts.reduce((a, b) => a + b, 0))}, Saturday 3, Sunday 9. Match wins are worth ${fmtPts(c.matchPts.win)}, halves ${fmtPts(c.matchPts.halve)}.</div>`;
+    `${fmtPts(possible)} points on the line</div></div><div class="onLine">Friday ${fmtPts(c.fri.pts.reduce((a, b) => a + b, 0))}, Saturday ${fmtPts(3 * c.matchPts.sat)}, Sunday ${fmtPts(3 * c.matchPts.front + 6 * c.matchPts.single)}. Saturday matches are worth ${fmtPts(c.matchPts.sat)}, Sunday front 9 matches ${fmtPts(c.matchPts.front)} and singles ${fmtPts(c.matchPts.single)}. A tie splits the points.</div>`;
 
   h += PH.boardTop;
   // Friday
@@ -974,12 +977,12 @@ function renderBoard(c, sc) {
 
   // Saturday
   h += PH.boardFri;
-  h += `<h2><span class="frame">SECOND ROUND · SATURDAY</span>Soule Park</h2><div class="teetimes">Tee times 11:00, 11:10, 11:20 · ${esc(c.tees.sat)} tees</div><p class="lede">Two-man scramble, match play against the other team. Team handicap is ${c.sat.low}% of the best player's plus ${c.sat.high}% of the worst player's. Each player's drive must be used once per nine. Each match is worth ${fmtPts(c.matchPts.win)} point, ${fmtPts(c.matchPts.halve)} each for a tie.</p><div class="list">` +
+  h += `<h2><span class="frame">SECOND ROUND · SATURDAY</span>Soule Park</h2><div class="teetimes">Tee times 11:00, 11:10, 11:20 · ${esc(c.tees.sat)} tees</div><p class="lede">Two-man scramble, match play against the other team. Team handicap is ${c.sat.low}% of the best player's plus ${c.sat.high}% of the worst player's. Each player's drive must be used once per nine. Each match is worth ${fmtPts(c.matchPts.sat)} points, ${fmtPts(c.matchPts.sat / 2)} each for a tie.</p><div class="list">` +
     W.S.map(m => matchRow(m.ta, m.tb, m.a, m.b, m.status, `Sides ${m.A.hcp} vs ${m.B.hcp}. ` + strokeNote(m.recv === 'A' ? m.a : m.b, m.alloc, 'strokes'))).join('') + `</div>`;
 
   // Sunday
   h += PH.boardSat;
-  h += `<h2><span class="frame">FINAL ROUND · SUNDAY</span>Olivas Links</h2><div class="teetimes">Tee times 9:00, 9:10, 9:20 · ${esc(c.tees.sun)} tees</div><p class="lede">Everyone plays their own ball. Front 9 is 2v2 net match play, back 9 is 1v1 net match play. On the front 9, handicaps are capped at 18 strokes off the best player in the group. On the back 9, strokes come from the two players head to head: half the difference in their handicaps. Nobody gets more than one stroke a hole. The front 9 is worth ${fmtPts(c.matchPts.win)} point and each back 9 match ${fmtPts(c.matchPts.win)} point, ${fmtPts(c.matchPts.halve)} each for a tie.</p>`;
+  h += `<h2><span class="frame">FINAL ROUND · SUNDAY</span>Olivas Links</h2><div class="teetimes">Tee times 9:00, 9:10, 9:20 · ${esc(c.tees.sun)} tees</div><p class="lede">Everyone plays their own ball. Front 9 is 2v2 net match play, back 9 is 1v1 net match play. On the front 9, handicaps are capped at 18 strokes off the best player in the group. On the back 9, strokes come from the two players head to head: half the difference in their handicaps. Nobody gets more than one stroke a hole. Each front 9 match is worth ${fmtPts(c.matchPts.front)} points and each back 9 match ${fmtPts(c.matchPts.single)} point. A tie splits the points.</p>`;
   W.U.forEach(g => {
     const fr = g.front;
     const fs = [...g.a, ...g.b].filter(id => g.fAlloc[id].given).map(id => `${pName(id)} ${g.fAlloc[id].given}${g.fAlloc[id].capped ? '*' : ''}`).join(', ') || 'no strokes';
@@ -1331,7 +1334,7 @@ function renderSetup(c) {
       <li>Team’s handicap = ${c.sat.low}% of the best player’s + ${c.sat.high}% of the worst player’s</li>
       <li>Match play against the other team</li>
       <li>Must use 1 drive from each player per 9 holes</li>
-      <li>Each match is worth up to ${fmtPts(c.matchPts.win)} point. A tied match is ${fmtPts(c.matchPts.halve)} point each</li>
+      <li>Each match is worth up to ${fmtPts(c.matchPts.sat)} points. A tied match is ${fmtPts(c.matchPts.sat / 2)} points each</li>
       <li>You can move the ball 1 club length on all full shots while setting up the next shot, no closer to the hole, without changing surface (e.g. from rough to fairway)</li>
       <li>You can move the ball 1 putter head length on the green</li></ul></div>
     <div class="rule"><div class="eyebrow">Sunday · Olivas Links</div><h3>Match play: 2v2 front 9, 1v1 back 9</h3><ul>
@@ -1342,8 +1345,8 @@ function renderSetup(c) {
       <li>Front 9 handicaps capped at 18 strokes off the best player in the group</li>
       <li>Back 9 strokes are head to head: half the difference between the two players’ handicaps</li>
       <li>Nobody receives more than 1 stroke per hole</li>
-      <li>Front 9 worth up to ${fmtPts(c.matchPts.win)} point, ${fmtPts(c.matchPts.halve)} for a tie</li>
-      <li>Each back 9 match worth up to ${fmtPts(c.matchPts.win)} point, ${fmtPts(c.matchPts.halve)} for a tie</li></ul></div>
+      <li>Front 9 worth up to ${fmtPts(c.matchPts.front)} points, ${fmtPts(c.matchPts.front / 2)} for a tie</li>
+      <li>Each back 9 match worth up to ${fmtPts(c.matchPts.single)} point, ${fmtPts(c.matchPts.single / 2)} for a tie</li></ul></div>
     <div class="rule"><div class="eyebrow">All three days</div><h3>On the course</h3><ul>
       <li>Gimme putts are at your opponent’s discretion</li>
       <li>Unsure what to do? Ask your playing partners</li></ul>
@@ -1371,8 +1374,9 @@ function renderSetup(c) {
     ${num('slow', 'sat.low', c.sat.low, 'Saturday % of lower handicap')}
     ${num('shigh', 'sat.high', c.sat.high, 'Saturday % of higher handicap')}
     ${num('spct', 'sun.pct', c.sun.pct, 'Sunday handicap %', 'Applied to half the course handicap for each nine')}
-    ${num('mw', 'matchPts.win', c.matchPts.win, 'Points for a match win', '', 0.5)}
-    ${num('mh', 'matchPts.halve', c.matchPts.halve, 'Points for a halved match', '', 0.5)}
+    ${num('mps', 'matchPts.sat', c.matchPts.sat, 'Points for a Saturday match', 'A tie is half', 0.5)}
+    ${num('mpf', 'matchPts.front', c.matchPts.front, 'Points for a Sunday front 9 match', 'A tie is half', 0.5)}
+    ${num('mp1', 'matchPts.single', c.matchPts.single, 'Points for a Sunday singles match', 'A tie is half', 0.5)}
   </div>`;
   const groups = sunGroups(c);
   h += `<h2 style="font-size:22px">Sunday pairings</h2><div class="form">
