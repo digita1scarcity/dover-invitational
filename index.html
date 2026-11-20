@@ -377,6 +377,12 @@ details.fholes summary { color: var(--sky); font-weight: 600; cursor: pointer; p
 .fh-t.low .fh-s { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px }
 .fh-who { display: flex; flex-direction: column; font-size: 12.5px; line-height: 1.35 }
 .fh-who span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+
+ul.fwait { list-style: none; margin: 8px 0 0; padding: 0; font-size: 13.5px; display: flex; flex-direction: column; gap: 3px }
+ul.fwait li { color: var(--muted) }
+ul.fwait li b { color: var(--ink) }
+ul.fwait li.late { color: var(--red) }
+ul.fwait li.late b { color: var(--red) }
 </style>
 
 </head>
@@ -1024,7 +1030,25 @@ function friHoles(F, c) {
     done.map(row).join('') +
     `<p class="lede" style="margin-top:6px">Each team's ${n} counting net scores, newest hole first. Underlined is the low team on the hole.</p></details>`;
 }
+function friWaiting(raw) {
+  const has = (id, i) => { const v = raw['fri-' + id] && raw['fri-' + id]['h' + (i + 1)]; return typeof v === 'number' && v > 0; };
+  const shown = new Set(friShown(raw));
+  const lines = [];
+  ALL18.forEach(i => {
+    if (shown.has(i) || !PLAYERS.some(p => has(p.id, i))) return;
+    const who = TEAMS.map(t => {
+      const mem = PLAYERS.filter(p => p.team === t.id), miss = mem.filter(p => !has(p.id, i));
+      if (!miss.length) return null;
+      const grp = t.name.replace('Team ', '') + "'s group";
+      return miss.length > 2 ? grp : miss.map(p => p.name).join(' and ') + ' in ' + grp;
+    }).filter(Boolean);
+    const late = TEAMS.some(t => PLAYERS.some(p => p.team === t.id && !has(p.id, i)) && ALL18.some(j => j > i && PLAYERS.some(p => p.team === t.id && has(p.id, j))));
+    lines.push(`<li class="${late ? 'late' : ''}"><b>Hole ${i + 1}</b> waiting on ${esc(who.length > 1 ? who.slice(0, -1).join(', ') + ' and ' + who[who.length - 1] : who[0])}</li>`);
+  });
+  return lines.length ? `<ul class="fwait">${lines.join('')}</ul>` : '';
+}
 function renderBoard(c, sc) {
+  const rawSc = sc;
   sc = friView(sc);
   const W = weekend(c, sc);
   const maxT = Math.max(...TEAMS.map(t => W.tot[t.id].total));
@@ -1049,6 +1073,7 @@ function renderBoard(c, sc) {
     F.sorted.map(t => `<tr class="${TEAMCLS[t.id]}"><td class="num">${t.thru ? (t.tied ? 'T' : '') + t.pos : '–'}</td><td><span class="tname"><span class="chip-dot"></span>${t.name.replace('Team ', '')}</span></td>
       <td class="r big num ${t.thru && t.toPar < 0 ? 'under' : ''}">${t.thru ? toPar(t.toPar) : '–'}</td><td class="r num">${t.thru || '–'}</td><td class="r num">${t.thru ? fmtPts(t.pts) + (F.final ? '' : '*') : '–'}</td></tr>`).join('') +
     `</tbody></table></div>${F.final ? '' : '<p class="lede" style="margin-top:6px">* Points lock in once all three teams finish 18. A hole shows here once all three teams have finished it.</p>'}
+  ${friWaiting(rawSc)}
   ${friHoles(F, c)}
   <details class="strokes"><summary>Friday strokes by player</summary><div class="sgrid">` +
     PLAYERS.map(p => { const a = F.alloc[p.id]; return `<div class="${TEAMCLS[p.team]}"><span><span class="chip-dot"></span>${p.name}</span><b class="num">${a.given}${a.capped ? '*' : ''}</b></div>`; }).join('') +
