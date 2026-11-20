@@ -722,7 +722,7 @@ const LS = {
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
 };
 const S = {
-  db: null, canWrite: false, live: false, loading: true,
+  db: null, canWrite: false, live: false, loading: true, pending: {}, rt: null,
   remote: {},                       // scores from the shared store
   local: LS.get('cc.local.v1', {}), // scores entered on this phone only (when it can't write)
   cfgStored: null, localCfg: LS.get('cc.cfg.v1', null),
@@ -757,25 +757,48 @@ async function supabaseDb() {
   const emitScores = () => subs.scores.forEach(([ok]) => ok(snapScores()));
   const emitConfig = () => subs.config.forEach(([ok]) => ok({ exists: !!config, data: () => config }));
   const failAll = e => subs.scores.forEach(([, bad]) => bad && bad(e));
-  const apply = r => { if (r && r.event === EV && r.card) (cards[r.card] || (cards[r.card] = {}))['h' + r.hole] = r.strokes; };
-  async function refetch() {
+  const PROBE = 'sun-zzlivecheck'; let probeCb = null, gen = 0;
+  const apply = r => { if (r && r.event === EV && r.card && r.card !== PROBE) (cards[r.card] || (cards[r.card] = {}))['h' + r.hole] = r.strokes; };
+  async function refetch(quiet) {
+    const g0 = gen;
     const [s, c] = await Promise.all([
       sb.from('dover_scores').select('event,card,hole,strokes').eq('event', EV).limit(5000),
       sb.from('dover_config').select('data').eq('event', EV).maybeSingle(),
     ]);
     if (s.error) throw s.error;
+    // A score arrived or was saved while this was loading: its rows may be older, so load again instead.
+    if (loaded && gen !== g0) { setTimeout(() => refetch(true).catch(() => {}), 500); return; }
+    const was = JSON.stringify(cards), wasCfg = JSON.stringify(config);
     for (const k in cards) delete cards[k];
-    s.data.forEach(apply); loaded = true; emitScores();
-    if (!c.error) { config = c.data ? c.data.data : null; emitConfig(); }
+    s.data.forEach(apply);
+    const first = !loaded; loaded = true;
+    if (!quiet || first || JSON.stringify(cards) !== was) emitScores();
+    if (!c.error) { config = c.data ? c.data.data : null; if (!quiet || first || JSON.stringify(config) !== wasCfg) emitConfig(); }
   }
   let started = false;
   function start() {
     if (started) return; started = true;
-    sb.channel('dover-' + EV)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'dover_scores', filter: 'event=eq.' + EV }, p => { apply(p.new); emitScores(); })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'dover_config', filter: 'event=eq.' + EV }, p => { if (p.new && p.new.data) { config = p.new.data; emitConfig(); } })
-      .subscribe(st => { if (st === 'SUBSCRIBED' && loaded) refetch().catch(() => {}); });
+    let ch = null, again = null;
+    const join = () => {
+      ch = sb.channel('dover-' + EV + '-' + Math.random().toString(36).slice(2, 8))
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'dover_scores', filter: 'event=eq.' + EV }, p => {
+          if (p.new && p.new.card === PROBE) { if (probeCb) probeCb(p.new); return; }
+          gen++; apply(p.new); emitScores();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'dover_config', filter: 'event=eq.' + EV }, p => { if (p.new && p.new.data) { config = p.new.data; emitConfig(); } })
+        .subscribe(st => {
+          if (st === 'SUBSCRIBED') { if (loaded) refetch(true).catch(() => {}); return; }
+          // Lost the live line (weak signal on the course): rejoin in a few seconds.
+          if ((st === 'CHANNEL_ERROR' || st === 'TIMED_OUT' || st === 'CLOSED') && !again) {
+            again = setTimeout(() => { again = null; const old = ch; join(); sb.removeChannel(old).catch(() => {}); }, 4000);
+          }
+        });
+    };
+    join();
     refetch().catch(failAll);
+    // Belt and braces: while the page is open, catch up every 20 seconds in case a live update was missed.
+    setInterval(() => { if (!document.hidden) refetch(true).catch(() => {}); }, 20000);
+    window.addEventListener('online', () => refetch(true).catch(() => {}));
     // Phones drop the live connection when they sleep: catch up when the page comes back.
     document.addEventListener('visibilitychange', () => { if (!document.hidden) refetch().catch(() => {}); });
   }
@@ -783,9 +806,22 @@ async function supabaseDb() {
   const must = async q => { const { error } = await q; if (error) throw error; };
   function saveCard(card, fields) {
     const rows = Object.entries(fields).map(([h, v]) => ({ event: EV, card, hole: +h.slice(1), strokes: v, updated_at: new Date().toISOString() }));
-    return retry(() => must(sb.from('dover_scores').upsert(rows, { onConflict: 'event,card,hole' })));
+    gen++;
+    return retry(() => must(sb.from('dover_scores').upsert(rows, { onConflict: 'event,card,hole' }))).finally(() => { gen++; });
+  }
+  // Write a throwaway value to a card nobody uses and time how long the live line takes to bring it back.
+  async function probe() {
+    start();
+    const v = 1 + Math.floor(Math.random() * 18), t0 = Date.now();
+    const heard = new Promise((res, rej) => {
+      const to = setTimeout(() => { probeCb = null; rej(new Error('timeout')); }, 10000);
+      probeCb = r => { if (r.strokes === v) { clearTimeout(to); probeCb = null; res(Date.now() - t0); } };
+    });
+    await must(sb.from('dover_scores').upsert({ event: EV, card: PROBE, hole: 1, strokes: v, updated_at: new Date().toISOString() }, { onConflict: 'event,card,hole' }));
+    return heard;
   }
   return {
+    probe,
     collection: name => ({ onSnapshot(ok, bad) { if (name === 'scores') { subs.scores.push([ok, bad]); if (loaded) ok(snapScores()); start(); } return () => {}; } }),
     doc: path => {
       const [col, id] = path.split('/');
@@ -816,7 +852,9 @@ function setSync() {
   const timer = setTimeout(() => { S.loading = false; setSync(); render(); }, 10000);
   const onErr = () => { clearTimeout(timer); S.loading = false; S.live = false; setSync(); render(); };
   db.collection('scores').onSnapshot(snap => {
-    const r = {}; snap.docs.forEach(d => { r[d.id] = d.data(); }); S.remote = r;
+    const r = {}; snap.docs.forEach(d => { r[d.id] = d.data(); });
+    for (const [k, f] of Object.entries(S.pending)) r[k] = { ...(r[k] || {}), ...f };
+    S.remote = r;
     if (!snap.metadata.fromCache) { clearTimeout(timer); S.live = true; S.loading = false; }
     setSync(); render();
   }, onErr);
@@ -834,6 +872,7 @@ function saveScore(key, hole, val) {
   S.remote = { ...S.remote, [key]: { ...(S.remote[key] || {}), [field]: val } };
   const q = queues[key] || (queues[key] = { fields: {}, running: false });
   q.fields[field] = val;
+  (S.pending[key] || (S.pending[key] = {}))[field] = val;
   render();
   if (!q.running) flush(key);
 }
@@ -842,6 +881,7 @@ async function flush(key) {
   while (Object.keys(q.fields).length) {
     const f = q.fields; q.fields = {};
     const ref = S.db.doc('scores/' + key);
+    const done = () => { const p = S.pending[key]; if (!p) return; for (const [fk, fv] of Object.entries(f)) if (p[fk] === fv) delete p[fk]; if (!Object.keys(p).length) delete S.pending[key]; };
     try {
       try { await ref.update(f); }
       catch (e) {
@@ -849,7 +889,9 @@ async function flush(key) {
         else if (e && e.code === 'unavailable') { await new Promise(r => setTimeout(r, 600 + Math.random() * 800)); await ref.update(f).catch(() => ref.set({ ...(S.remote[key] || {}), ...f })); }
         else throw e;
       }
+      done();
     } catch (e) {
+      done();
       // This viewer can't write the shared card: keep the entry on this phone instead.
       S.canWrite = false;
       S.local[key] = { ...(S.local[key] || {}), ...f }; LS.set('cc.local.v1', S.local);
@@ -1319,6 +1361,7 @@ function renderSetup(c) {
     : `<div class="note">This phone isn't connected to the shared scorecard right now${S.loading ? '' : ', so scores you enter save on this phone'}. You can send them from the bottom of this page.</div>`;
   h += `<h2 style="font-size:22px">Keep score from any phone</h2><div class="note" style="margin-top:6px">Each phone picks who is holding it, then keeps score only for that player's group that day. No sign-in, and every phone updates live. The tag at the top reads <b>Live</b> when a phone is connected.
     <ol><li>Open the link in Safari or Chrome.</li><li>Tap <b>Share</b>, then <b>Add to Home Screen</b>, to get the house icon like an app.</li></ol></div>`;
+  if (shared && S.db.probe) h += `<p class="lede" style="margin-top:10px">Scores show up on every phone as soon as they're entered, with no refresh. <button class="btn" data-act="rtcheck" ${S.rt === 'busy' ? 'disabled' : ''}>${S.rt === 'busy' ? 'Checking…' : 'Check live updates'}</button> <span id="rt-msg">${S.rt && S.rt !== 'busy' ? esc(S.rt) : ''}</span></p>`;
   h += PH.setupTop;
   h += `<h2 style="font-size:22px">This phone</h2><p class="lede">${S.me ? `Keeping score as <b>${esc(pName(S.me))}</b>. Tap another name to switch.` : 'Pick who is holding this phone.'}</p>` + pickButtons();
   h += `<h2 style="font-size:22px">Rules</h2><div class="list rules">
@@ -1407,6 +1450,14 @@ document.addEventListener('click', ev => {
   const el = ev.target.closest('[data-act]'); if (!el) return;
   const act = el.dataset.act, c = cfg(), round = S.ui.round;
   if (act === 'wxrefresh') { loadWx(true); return; }
+  if (act === 'rtcheck') {
+    if (!S.db || !S.db.probe || S.rt === 'busy') return;
+    S.rt = 'busy'; render();
+    S.db.probe().then(ms => { S.rt = `Working. A test update came back in ${(ms / 1000).toFixed(1)} seconds.`; })
+      .catch(() => { S.rt = "Live updates didn't come through just now. Scores still catch up every 20 seconds."; })
+      .finally(() => { if (view() === 'setup') render(); });
+    return;
+  }
   if (act === 'me') { setMe(el.dataset.v); render(); return; }
   if (act === 'round') { S.ui.round = el.dataset.v; saveUi(); render(); return; }
   if (act === 'group') { S.ui.group[round] = +el.dataset.v; saveUi(); render(); return; }
