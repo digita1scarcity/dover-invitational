@@ -383,6 +383,18 @@ ul.fwait li { color: var(--muted) }
 ul.fwait li b { color: var(--ink) }
 ul.fwait li.late { color: var(--red) }
 ul.fwait li.late b { color: var(--red) }
+
+details.fused { margin-top: 10px; font-size: 13.5px }
+details.fused summary { color: var(--sky); font-weight: 600; cursor: pointer; padding: 6px 0 }
+.fu-row { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 8px; align-items: baseline; padding: 7px 0; border-bottom: 1px dotted var(--line) }
+.fu-t small { display: block; font-weight: 500; font-size: 11px; color: var(--muted) }
+.fu-t { font-weight: 700; color: var(--tc); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.fu-ppl { display: flex; flex-wrap: wrap; gap: 4px 14px; min-width: 0 }
+.fu-ppl b { font-size: 15px }
+
+details.fcards { margin-top: 10px; font-size: 13.5px }
+details.fcards summary { color: var(--sky); font-weight: 600; cursor: pointer; padding: 6px 0 }
+details.fcards .card { margin-top: 6px }
 </style>
 
 </head>
@@ -964,7 +976,11 @@ function friShown(sc) {
   const has = (id, i) => { const v = sc['fri-' + id] && sc['fri-' + id]['h' + (i + 1)]; return typeof v === 'number' && v > 0; };
   return ALL18.filter(i => PLAYERS.every(p => has(p.id, i)));
 }
+function friOver(sc) {
+  return PLAYERS.every(p => { const v = sc['fri-' + p.id] && sc['fri-' + p.id].h18; return typeof v === 'number' && v > 0; });
+}
 function friView(sc) {
+  if (friOver(sc)) return sc;
   const shown = new Set(friShown(sc).map(i => 'h' + (i + 1)));
   const cards = new Set(PLAYERS.map(p => 'fri-' + p.id));
   const out = {};
@@ -1047,6 +1063,46 @@ function friWaiting(raw) {
   });
   return lines.length ? `<ul class="fwait">${lines.join('')}</ul>` : '';
 }
+function friUsed(F, c) {
+  const n = c.fri.bestN;
+  if (!F.teams.some(t => t.thru)) return '';
+  const order = TEAMS.map(t => F.teams.find(x => x.id === t.id));
+  const rows = order.map(t => {
+    const cnt = t.members.map(() => 0), done = ALL18.filter(h => t.holes[h].team !== null);
+    done.forEach(h => {
+      const nets = t.holes[h].nets, got = nets.filter(v => v !== null).sort((a, b) => a - b);
+      const cut = got[Math.min(n, got.length) - 1];
+      nets.forEach((v, i) => { if (v !== null && v <= cut) cnt[i]++; });
+    });
+    const ppl = t.members.map((id, i) => ({ id, k: cnt[i] })).sort((a, b) => b.k - a.k);
+    return `<div class="fu-row ${TEAMCLS[t.id]}"><div class="fu-t"><span class="chip-dot"></span>${t.name.replace('Team ', '')}<small>${done.length} holes</small></div><div class="fu-ppl">` +
+      ppl.map(p => `<span>${esc(pName(p.id))} <b class="num">${p.k}</b></span>`).join('') + `</div></div>`;
+  }).join('');
+  return `<details class="fused" open><summary>Scores used by player</summary>${rows}
+    <p class="lede" style="margin-top:6px">How many holes each player's net score counted. When players tie for a counting spot, each of them gets credit.</p></details>`;
+}
+function friCards(F, c, raw) {
+  if (!friOver(raw)) return '';
+  const par = COURSES.fri.par;
+  const card = t => {
+    const g = (id, h) => { const v = raw['fri-' + id] && raw['fri-' + id]['h' + (h + 1)]; return typeof v === 'number' && v > 0 ? v : null; };
+    const sum = (f, a, b) => { let s = 0, k = 0; for (let h = a; h < b; h++) { const v = f(h); if (v !== null) { s += v; k++; } } return k ? s : ''; };
+    const sub = (a, b, lab) => `<tr class="sub"><td>${lab}</td><td>${par.slice(a, b).reduce((x, y) => x + y, 0)}</td>` +
+      t.members.map(id => `<td>${sum(h => g(id, h), a, b)}</td>`).join('') + `<td>${sum(h => t.holes[h].team, a, b)}</td></tr>`;
+    const netRow = `<tr class="sub"><td>Net</td><td></td>` + t.members.map((id, i) => `<td>${sum(h => t.holes[h].nets[i], 0, 18)}</td>`).join('') + `<td></td></tr>`;
+    return `<div class="eyebrow" style="margin:14px 0 0">${esc(t.name)}</div><div class="card"><table><thead><tr><th>Hole</th><th>Par</th>` +
+      t.members.map(id => `<th class="${TEAMCLS[t.id]}"><span class="tname">${esc(pName(id).slice(0, 7))}</span></th>`).join('') + `<th>Team</th></tr></thead><tbody>` +
+      ALL18.map(h => {
+        const r = `<tr><td>${h + 1}</td><td>${par[h]}</td>` + t.members.map((id, i) => {
+          const v = g(id, h), st = F.alloc[id].perHole[h];
+          return `<td class="${t.holes[h].used.includes(i) ? 'cnt' : ''}">${v === null ? '' : `<span class="s ${v < par[h] ? 'bird' : v > par[h] ? 'bog' : ''}">${v}</span>`}${st ? `<sup>${'•'.repeat(st)}</sup>` : ''}</td>`;
+        }).join('') + `<td>${t.holes[h].team === null ? '' : t.holes[h].team}</td></tr>`;
+        return r + (h === 8 ? sub(0, 9, 'Out') : '') + (h === 17 ? sub(9, 18, 'In') + sub(0, 18, 'Total') + netRow : '');
+      }).join('') + `</tbody></table></div>`;
+  };
+  return `<details class="fcards" open><summary>Every scorecard</summary>` + TEAMS.map(x => card(F.teams.find(y => y.id === x.id))).join('') +
+    `<p class="lede" style="margin-top:6px">Gross scores, with dots for strokes received. Underlined scores counted toward the team net, and Team is the team's net on each hole.</p></details>`;
+}
 function renderBoard(c, sc) {
   const rawSc = sc;
   sc = friView(sc);
@@ -1075,6 +1131,8 @@ function renderBoard(c, sc) {
     `</tbody></table></div>${F.final ? '' : '<p class="lede" style="margin-top:6px">* Points lock in once all three teams finish 18. A hole shows here once all three teams have finished it.</p>'}
   ${friWaiting(rawSc)}
   ${friHoles(F, c)}
+  ${friUsed(F, c)}
+  ${friCards(F, c, rawSc)}
   <details class="strokes"><summary>Friday strokes by player</summary><div class="sgrid">` +
     PLAYERS.map(p => { const a = F.alloc[p.id]; return `<div class="${TEAMCLS[p.team]}"><span><span class="chip-dot"></span>${p.name}</span><b class="num">${a.given}${a.capped ? '*' : ''}</b></div>`; }).join('') +
     `</div>${PLAYERS.some(p => F.alloc[p.id].capped) ? '<p class="lede">* Capped at one stroke per hole.</p>' : ''}</details>`;
