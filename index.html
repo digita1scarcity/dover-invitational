@@ -404,6 +404,11 @@ details.fcards .card { margin-top: 6px }
 .sd-n { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; min-width: 0 }
 .sd-n small { width: 40px; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em }
 .sd-n b { font-size: 15px }
+
+.sh-head { margin: 14px 0 0; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline }
+.sh-head .tname { color: var(--tc) }
+.sh-head .sh-st { margin-left: auto; color: var(--tc, var(--ink)); text-transform: none; letter-spacing: 0 }
+.card td.sh-run { color: var(--tc, var(--muted)); font-weight: 700; white-space: nowrap }
 </style>
 
 </head>
@@ -1133,6 +1138,37 @@ function friDrives(W, raw) {
   return `<details class="fused fdrv" ${detOpen('fdrv')}><summary>Drives by player</summary>${rows}
     <p class="lede" style="margin-top:6px">How many holes each player's tee shot was used. The rule is at least one each.</p></details>`;
 }
+function satHoles(W, sc) {
+  const par = COURSES.sat.par;
+  if (!W.S.some(m => ALL18.some(h => gross(sc, m.key('A'), h) !== null || gross(sc, m.key('B'), h) !== null))) return '';
+  const two = ids => ids.map(id => esc(pName(id))).join('<br>');
+  const card = m => {
+    const head = `<div class="eyebrow sh-head"><span class="${TEAMCLS[m.ta]} tname"><span class="chip-dot"></span>${names(m.a)}</span> <span class="vs">vs</span> <span class="${TEAMCLS[m.tb]} tname"><span class="chip-dot"></span>${names(m.b)}</span><b class="sh-st ${m.status.leader ? TEAMCLS[m.status.leader === 'A' ? m.ta : m.tb] : ''}">${esc(m.status.text)}</b></div>`;
+    if (!m.status.played && !ALL18.some(h => gross(sc, m.key('A'), h) !== null || gross(sc, m.key('B'), h) !== null)) return head;
+    let up = 0, on = true;
+    const cell = (s, h) => {
+      const v = gross(sc, m.key(s), h), st = m.strokes(s, h), r = m.res[h];
+      const won = r !== null && (s === 'A' ? r > 0 : r < 0);
+      return `<td class="${won ? 'cnt' : ''}">${v === null ? '' : `<span class="s ${v < par[h] ? 'bird' : v > par[h] ? 'bog' : ''}">${v}</span>`}${st ? `<sup>${'•'.repeat(st)}</sup>` : ''}</td>`;
+    };
+    const sum = (s, a, b) => { let x = 0, k = 0; for (let h = a; h < b; h++) { const v = gross(sc, m.key(s), h); if (v !== null) { x += v; k++; } } return k ? x : ''; };
+    const sub = (a, b, lab) => `<tr class="sub"><td>${lab}</td><td>${par.slice(a, b).reduce((x, y) => x + y, 0)}</td><td>${sum('A', a, b)}</td><td>${sum('B', a, b)}</td><td></td></tr>`;
+    const rows = ALL18.map(h => {
+      let stTxt = '', cls = '';
+      const r = m.res[h];
+      if (on && r !== null) {
+        up += r; const left = 17 - h;
+        cls = up > 0 ? TEAMCLS[m.ta] : up < 0 ? TEAMCLS[m.tb] : '';
+        stTxt = up === 0 ? 'AS' : Math.abs(up) > left ? `${Math.abs(up)}${left ? '&' + left : ' up'}` : `${Math.abs(up)} up`;
+        if (Math.abs(up) > left) on = false;
+      } else if (r === null) on = false;
+      return `<tr><td>${h + 1}</td><td>${par[h]}</td>${cell('A', h)}${cell('B', h)}<td class="sh-run ${cls}">${stTxt}</td></tr>` + (h === 8 ? sub(0, 9, 'Out') : '') + (h === 17 ? sub(9, 18, 'In') + sub(0, 18, 'Total') : '');
+    }).join('');
+    return head + `<div class="card"><table><thead><tr><th>Hole</th><th>Par</th><th class="${TEAMCLS[m.ta]}"><span class="tname">${two(m.a)}</span></th><th class="${TEAMCLS[m.tb]}"><span class="tname">${two(m.b)}</span></th><th>Match</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  };
+  return `<details class="fcards sholes" ${detOpen('sholes')}><summary>Hole by hole</summary>` + W.S.map(card).join('') +
+    `<p class="lede" style="margin-top:6px">Each team's gross score, with dots for strokes received. The underlined score won the hole, and Match is where the match stands after that hole.</p></details>`;
+}
 function satDrives(W, sc) {
   const sides = W.S.flatMap((m, gi) => driveSides(W, 'sat', gi));
   if (!sides.some(sd => ALL18.some(h => drvAt(sc, sd.key, h) !== null))) return '';
@@ -1185,7 +1221,7 @@ function renderBoard(c, sc) {
   // Saturday
   h += PH.boardFri;
   h += `<h2><span class="frame">SECOND ROUND · SATURDAY</span>Soule Park</h2><div class="teetimes">Tee times 11:00, 11:10, 11:20 · ${esc(c.tees.sat)} tees</div><p class="lede">Two-man scramble, match play against the other team. Team handicap is ${c.sat.low}% of the best player's plus ${c.sat.high}% of the worst player's. Each player's drive must be used once per nine. Each match is worth ${fmtPts(c.matchPts.sat)} points, ${fmtPts(c.matchPts.sat / 2)} each for a tie.</p><div class="list">` +
-    W.S.map(m => matchRow(m.ta, m.tb, m.a, m.b, m.status, `Sides ${m.A.hcp} vs ${m.B.hcp}. ` + strokeNote(m.recv === 'A' ? m.a : m.b, m.alloc, 'strokes'))).join('') + `</div>` + satDrives(W, sc);
+    W.S.map(m => matchRow(m.ta, m.tb, m.a, m.b, m.status, `Sides ${m.A.hcp} vs ${m.B.hcp}. ` + strokeNote(m.recv === 'A' ? m.a : m.b, m.alloc, 'strokes'))).join('') + `</div>` + satHoles(W, sc) + satDrives(W, sc);
 
   // Sunday
   h += PH.boardSat;
