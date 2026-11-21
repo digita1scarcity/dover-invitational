@@ -1143,7 +1143,7 @@ function satHoles(W, sc) {
   if (!W.S.some(m => ALL18.some(h => gross(sc, m.key('A'), h) !== null || gross(sc, m.key('B'), h) !== null))) return '';
   const two = ids => ids.map(id => esc(pName(id))).join('<br>');
   const card = m => {
-    const head = `<div class="eyebrow sh-head"><span class="${TEAMCLS[m.ta]} tname"><span class="chip-dot"></span>${names(m.a)}</span> <span class="vs">vs</span> <span class="${TEAMCLS[m.tb]} tname"><span class="chip-dot"></span>${names(m.b)}</span><b class="sh-st ${m.status.leader ? TEAMCLS[m.status.leader === 'A' ? m.ta : m.tb] : ''}">${esc(m.status.text)}</b></div>`;
+    const head = `<div class="eyebrow sh-head"><span class="${TEAMCLS[m.ta]} tname"><span class="chip-dot"></span>${names(m.a)}</span> <span class="vs">vs</span> <span class="${TEAMCLS[m.tb]} tname"><span class="chip-dot"></span>${names(m.b)}</span><b class="sh-st ${m.status.leader ? TEAMCLS[m.status.leader === 'A' ? m.ta : m.tb] : ''}">${m.status.leader && !m.status.final ? names(m.status.leader === 'A' ? m.a : m.b) + ' ' : ''}${esc(m.status.text)}</b></div>`;
     if (!m.status.played && !ALL18.some(h => gross(sc, m.key('A'), h) !== null || gross(sc, m.key('B'), h) !== null)) return head;
     let up = 0, on = true;
     const cell = (s, h) => {
