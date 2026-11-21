@@ -1063,6 +1063,9 @@ function friWaiting(raw) {
   });
   return lines.length ? `<ul class="fwait">${lines.join('')}</ul>` : '';
 }
+const DET_OPEN = new Set();
+document.addEventListener('toggle', e => { const d = e.target; if (d && d.tagName === 'DETAILS' && d.dataset && d.dataset.k) { if (d.open) DET_OPEN.add(d.dataset.k); else DET_OPEN.delete(d.dataset.k); } }, true);
+const detOpen = k => `data-k="${k}"${DET_OPEN.has(k) ? ' open' : ''}`;
 function friUsed(F, c) {
   const n = c.fri.bestN;
   if (!F.teams.some(t => t.thru)) return '';
@@ -1078,7 +1081,7 @@ function friUsed(F, c) {
     return `<div class="fu-row ${TEAMCLS[t.id]}"><div class="fu-t"><span class="chip-dot"></span>${t.name.replace('Team ', '')}<small>${done.length} holes</small></div><div class="fu-ppl">` +
       ppl.map(p => `<span>${esc(pName(p.id))} <b class="num">${p.k}</b></span>`).join('') + `</div></div>`;
   }).join('');
-  return `<details class="fused" open><summary>Scores used by player</summary>${rows}
+  return `<details class="fused" ${detOpen('fused')}><summary>Scores used by player</summary>${rows}
     <p class="lede" style="margin-top:6px">How many holes each player's net score counted. When players tie for a counting spot, each of them gets credit.</p></details>`;
 }
 function friCards(F, c, raw) {
@@ -1100,7 +1103,7 @@ function friCards(F, c, raw) {
         return r + (h === 8 ? sub(0, 9, 'Out') : '') + (h === 17 ? sub(9, 18, 'In') + sub(0, 18, 'Total') + netRow : '');
       }).join('') + `</tbody></table></div>`;
   };
-  return `<details class="fcards" open><summary>Every scorecard</summary>` + TEAMS.map(x => card(F.teams.find(y => y.id === x.id))).join('') +
+  return `<details class="fcards" ${detOpen('fcards')}><summary>Every scorecard</summary>` + TEAMS.map(x => card(F.teams.find(y => y.id === x.id))).join('') +
     `<p class="lede" style="margin-top:6px">Gross scores, with dots for strokes received. Underlined scores counted toward the team net, and Team is the team's net on each hole.</p></details>`;
 }
 function renderBoard(c, sc) {
