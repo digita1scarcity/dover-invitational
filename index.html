@@ -1041,7 +1041,7 @@ function friHoles(F, c) {
       return `<div class="fh-t ${TEAMCLS[t.id]} ${x.team === best ? 'low' : ''}"><div class="fh-s num">${x.team}<small class="${d < 0 ? 'under' : ''}">${rel(d)}</small></div><div class="fh-who">${who}</div></div>`;
     }).join('') + `</div>`;
   };
-  return `<details class="fholes" open><summary>Hole by hole · ${done.length} of 18</summary>
+  return `<details class="fholes" ${detOpen('fholes')}><summary>Hole by hole · ${done.length} of 18</summary>
     <div class="fh-head"><span></span>${order.map(t => `<span class="${TEAMCLS[t.id]} tname"><span class="chip-dot"></span>${t.name.replace('Team ', '')}</span>`).join('')}</div>` +
     done.map(row).join('') +
     `<p class="lede" style="margin-top:6px">Each team's ${n} counting net scores, newest hole first. Underlined is the low team on the hole.</p></details>`;
