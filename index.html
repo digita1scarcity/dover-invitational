@@ -395,6 +395,15 @@ details.fused summary { color: var(--sky); font-weight: 600; cursor: pointer; pa
 details.fcards { margin-top: 10px; font-size: 13.5px }
 details.fcards summary { color: var(--sky); font-weight: 600; cursor: pointer; padding: 6px 0 }
 details.fcards .card { margin-top: 6px }
+
+.fu-ppl .fd-zero, .sd-n .fd-zero { color: var(--red, #b3261e) }
+.fd-note { flex-basis: 100%; font-size: 12.5px; color: var(--muted) }
+.fd-note.warn { color: var(--red, #b3261e) }
+.sd-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; padding: 7px 0; border-bottom: 1px dotted var(--line) }
+.sd-row .fu-t { white-space: normal }
+.sd-n { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; min-width: 0 }
+.sd-n small { width: 40px; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em }
+.sd-n b { font-size: 15px }
 </style>
 
 </head>
@@ -1106,6 +1115,38 @@ function friCards(F, c, raw) {
   return `<details class="fcards" ${detOpen('fcards')}><summary>Every scorecard</summary>` + TEAMS.map(x => card(F.teams.find(y => y.id === x.id))).join('') +
     `<p class="lede" style="margin-top:6px">Gross scores, with dots for strokes received. Underlined scores counted toward the team net, and Team is the team's net on each hole.</p></details>`;
 }
+const drvAt = (sc, k, h) => { const v = sc[k] && sc[k]['h' + (h + 1)]; return typeof v === 'number' && v > 0 ? v : null; };
+function friDrives(W, raw) {
+  const shown = friOver(raw) ? ALL18 : friShown(raw);
+  if (!TEAMS.some((t, gi) => shown.some(h => drvAt(raw, driveKey('fri', gi), h) !== null))) return '';
+  const rows = TEAMS.map((t, gi) => {
+    const sd = driveSides(W, 'fri', gi)[0];
+    const got = shown.filter(h => drvAt(raw, sd.key, h) !== null);
+    const cnt = sd.ids.map((id, i) => got.filter(h => drvAt(raw, sd.key, h) === i + 1).length);
+    const all = got.length === 18;
+    const ppl = sd.ids.map((id, i) => ({ id, k: cnt[i] })).sort((a, b) => b.k - a.k);
+    const short = all ? ppl.filter(p => !p.k).map(p => pName(p.id)) : [];
+    const note = !got.length ? `<div class="fd-note">No tee shots entered.</div>` : short.length ? `<div class="fd-note warn">${short.join(' and ')} had no tee shot used.</div>` : '';
+    return `<div class="fu-row ${TEAMCLS[t.id]}"><div class="fu-t"><span class="chip-dot"></span>${t.name.replace('Team ', '')}<small>${got.length} of 18 entered</small></div><div class="fu-ppl">` +
+      (got.length ? ppl.map(p => `<span class="${all && !p.k ? 'fd-zero' : ''}">${esc(pName(p.id))} <b class="num">${p.k}</b></span>`).join('') : '') + note + `</div></div>`;
+  }).join('');
+  return `<details class="fused fdrv" ${detOpen('fdrv')}><summary>Drives by player</summary>${rows}
+    <p class="lede" style="margin-top:6px">How many holes each player's tee shot was used. The rule is at least one each.</p></details>`;
+}
+function satDrives(W, sc) {
+  const sides = W.S.flatMap((m, gi) => driveSides(W, 'sat', gi));
+  if (!sides.some(sd => ALL18.some(h => drvAt(sc, sd.key, h) !== null))) return '';
+  const nine = (sd, span) => {
+    const cnt = sd.ids.map((id, i) => span.filter(h => drvAt(sc, sd.key, h) === i + 1).length);
+    const left = span.filter(h => drvAt(sc, sd.key, h) === null).length;
+    const need = sd.ids.filter((id, i) => !cnt[i]).length;
+    return sd.ids.map((id, i) => `<span class="${!cnt[i] && need > left ? 'fd-zero' : ''}">${esc(pName(id))} <b class="num">${cnt[i]}</b></span>`).join('');
+  };
+  const rows = sides.map(sd => `<div class="sd-row ${TEAMCLS[sd.team]}"><div class="fu-t"><span class="chip-dot"></span>${esc(sd.label)}</div>
+    <div class="sd-n"><small>Front</small>${nine(sd, FRONT)}</div><div class="sd-n"><small>Back</small>${nine(sd, BACK)}</div></div>`).join('');
+  return `<details class="fused sdrv" ${detOpen('sdrv')}><summary>Drives by player</summary>${rows}
+    <p class="lede" style="margin-top:6px">How many holes each player's drive was used on each nine. The rule is one each per nine. Red means a player can no longer get one in.</p></details>`;
+}
 function renderBoard(c, sc) {
   const rawSc = sc;
   sc = friView(sc);
@@ -1136,6 +1177,7 @@ function renderBoard(c, sc) {
   ${friHoles(F, c)}
   ${friUsed(F, c)}
   ${friCards(F, c, rawSc)}
+  ${friDrives(W, rawSc)}
   <details class="strokes"><summary>Friday strokes by player</summary><div class="sgrid">` +
     PLAYERS.map(p => { const a = F.alloc[p.id]; return `<div class="${TEAMCLS[p.team]}"><span><span class="chip-dot"></span>${p.name}</span><b class="num">${a.given}${a.capped ? '*' : ''}</b></div>`; }).join('') +
     `</div>${PLAYERS.some(p => F.alloc[p.id].capped) ? '<p class="lede">* Capped at one stroke per hole.</p>' : ''}</details>`;
@@ -1143,7 +1185,7 @@ function renderBoard(c, sc) {
   // Saturday
   h += PH.boardFri;
   h += `<h2><span class="frame">SECOND ROUND · SATURDAY</span>Soule Park</h2><div class="teetimes">Tee times 11:00, 11:10, 11:20 · ${esc(c.tees.sat)} tees</div><p class="lede">Two-man scramble, match play against the other team. Team handicap is ${c.sat.low}% of the best player's plus ${c.sat.high}% of the worst player's. Each player's drive must be used once per nine. Each match is worth ${fmtPts(c.matchPts.sat)} points, ${fmtPts(c.matchPts.sat / 2)} each for a tie.</p><div class="list">` +
-    W.S.map(m => matchRow(m.ta, m.tb, m.a, m.b, m.status, `Sides ${m.A.hcp} vs ${m.B.hcp}. ` + strokeNote(m.recv === 'A' ? m.a : m.b, m.alloc, 'strokes'))).join('') + `</div>`;
+    W.S.map(m => matchRow(m.ta, m.tb, m.a, m.b, m.status, `Sides ${m.A.hcp} vs ${m.B.hcp}. ` + strokeNote(m.recv === 'A' ? m.a : m.b, m.alloc, 'strokes'))).join('') + `</div>` + satDrives(W, sc);
 
   // Sunday
   h += PH.boardSat;
