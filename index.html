@@ -1038,12 +1038,12 @@ function render(opts = {}) {
 
 // ---- What if (scenario generator) ----
 const WI_DD = [
-  { a: ['dan', 'micah'], b: ['josh', 'nolan'] },
-  { a: ['fasky', 'sivan'], b: ['kyle', 'jeremy'] },
-  { a: ['daniel', 'david'], b: ['fromer', 'greg'] },
+  { a: ['greg', 'josh'], b: ['dan', 'micah'] },
+  { a: ['fromer', 'nolan'], b: ['jeremy', 'kyle'] },
+  { a: ['fasky', 'sivan'], b: ['daniel', 'david'] },
 ];
-const WI = Object.assign({ pair: 'dd', pick: {} }, LS.get('cc.whatif.v1', {}));
-const wiSave = () => LS.set('cc.whatif.v1', WI);
+const WI = Object.assign({ pair: 'dd', pick: {} }, LS.get('cc.whatif.v2', {}));
+const wiSave = () => LS.set('cc.whatif.v2', WI);
 const wiKey = (type, a, b) => type + ':' + a.join('+') + '~' + b.join('+');
 function wiModel(c, sc) {
   const W = weekend(c, sc);
@@ -1104,8 +1104,8 @@ function renderWhatIf(c, sc) {
   const picked = Object.keys(WI.pick).length;
   let h = `<h2><span class="frame">SCENARIOS</span>What if</h2>
     <p class="lede">Starts from the real Friday and Saturday results. Pick how each match still to be decided finishes and the standings below add it up. Nothing here changes the live scores or pairings, and your picks stay on this phone.</p>
-    <div class="seg wi-pair">` + [['dd', 'Daniel & David', 'paired Sunday'], ['live', 'Live', 'Sunday pairings']].map(([v, a, b]) => `<button data-act="wipair" data-v="${v}" aria-pressed="${WI.pair === v}">${a}<small>${b}</small></button>`).join('') + `</div>` +
-    (WI.pair === 'dd' ? `<p class="lede" style="margin-top:8px">Daniel and David take on Fromer and Greg, with Daniel v Fromer and David v Greg in the singles. Jeremy moves into David's spot with Kyle against Fasky and Sivan, and plays Sivan in the singles. Group 1 stays as it is.</p>` : '');
+    <div class="seg wi-pair">` + [['dd', 'Your pairings', 'for Sunday'], ['live', 'Live', 'Sunday pairings']].map(([v, a, b]) => `<button data-act="wipair" data-v="${v}" aria-pressed="${WI.pair === v}">${a}<small>${b}</small></button>`).join('') + `</div>` +
+    (WI.pair === 'dd' ? `<p class="lede" style="margin-top:8px">Greg and Josh v Dan and Micah, Fromer and Nolan v Jeremy and Kyle, Fasky and Sivan v Daniel and David. Singles pair the lower handicaps and the higher ones in each match: Greg v Dan, Josh v Micah, Fromer v Jeremy, Nolan v Kyle, Fasky v Daniel, Sivan v David.</p>` : '');
   h += `<div class="list"><table class="std"><thead><tr><th>Pos</th><th>Team</th><th class="r">Fri</th><th class="r">Sat</th><th class="r">Sun</th><th class="r">Total</th></tr></thead><tbody>` +
     ranked.map(t => { const x = M.tot[t.id]; return `<tr class="${TEAMCLS[t.id]}"><td class="num">${posOf(t.id)}</td><td><span class="tname"><span class="chip-dot"></span>${t.name.replace('Team ', '')}</span></td><td class="r num">${fmtPts(x.fri)}</td><td class="r num">${fmtPts(x.sat)}</td><td class="r num">${fmtPts(x.sun)}</td><td class="r big num">${fmtPts(x.total)}</td></tr>`; }).join('') +
     `</tbody></table></div><p class="lede" style="margin-top:6px">${M.open ? `${fmtPts(M.open)} points still unpicked.` : 'Every match is decided in this scenario.'}${M.friFinal ? '' : ' Friday is not final yet, so its points are as things stand.'}</p>`;
