@@ -409,6 +409,8 @@ details.fcards .card { margin-top: 6px }
 .sh-head .tname { color: var(--tc) }
 .sh-head .sh-st { margin-left: auto; color: var(--tc, var(--ink)); text-transform: none; letter-spacing: 0 }
 .card td.sh-run { color: var(--tc, var(--muted)); font-weight: 700; white-space: nowrap }
+
+table.pr td sup { font-size: 9px; color: var(--muted); margin-left: 1px }
 </style>
 
 </head>
@@ -1012,6 +1014,46 @@ function render(opts = {}) {
   app.innerHTML = html;
 }
 
+// ---- Power ranking: strokes vs handicap expectation ----
+function powerRank(c, sc, W) {
+  const nc = Object.assign({}, c, { capOne: false });
+  const rows = {}; PLAYERS.forEach(p => { rows[p.id] = { id: p.id, team: p.team, fri: null, sat: null, sun: null }; });
+  const vsExp = (round, key, ch) => {
+    const card = sc[key]; if (!card) return null;
+    const al = allocate(nc, round, Math.round(ch), ALL18);
+    let d = 0, n = 0;
+    ALL18.forEach(h => {
+      const v = card['h' + (h + 1)]; if (typeof v !== 'number' || v <= 0) return;
+      const exp = COURSES[round].par[h] + al.perHole[h];
+      d += Math.min(v, exp + 2) - exp; n++;
+    });
+    return n ? { d, n } : null;
+  };
+  ['fri', 'sun'].forEach(r => PLAYERS.forEach(p => { const x = vsExp(r, r + '-' + p.id, courseHcp(c, r, p.id)); if (x) rows[p.id][r] = x; }));
+  W.S.forEach(m => ['A', 'B'].forEach(s => {
+    const ids = s === 'A' ? m.a : m.b;
+    const chs = ids.map(id => courseHcp(c, 'sat', id)).sort((a, b) => a - b);
+    const th = chs[0] * c.sat.low / 100 + chs[chs.length - 1] * c.sat.high / 100;
+    const x = vsExp('sat', m.key(s), th); if (x) ids.forEach(id => { rows[id].sat = x; });
+  }));
+  const out = Object.values(rows).map(r => {
+    const rs = ['fri', 'sat', 'sun'].map(k => r[k]).filter(Boolean);
+    const D = rs.reduce((a, x) => a + x.d, 0), N = rs.reduce((a, x) => a + x.n, 0);
+    return { ...r, avg: N ? D / N * 18 : null, holes: N };
+  }).filter(r => r.avg !== null);
+  return out.sort((a, b) => a.avg - b.avg);
+}
+function powerSection(c, sc, W) {
+  const R = powerRank(c, sc, W);
+  if (!R.length) return '';
+  const f = x => { if (x === null || x === undefined) return '–'; const v = Math.round(x * 10) / 10; return (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(1); };
+  const per = x => x ? f(x.d / x.n * 18) + (x.n < 18 ? `<sup>${x.n}</sup>` : '') : '–';
+  return `<h2><span class="frame">THE WEEKEND</span>Power rankings</h2>
+    <p class="lede">Each player against what their handicap predicts, in strokes per 18 holes. Minus is better than expected. Expected is par plus the player's course handicap, spread by each hole's stroke index, and a blow-up hole counts at most net double bogey. Saturday is the scramble team's score against its team handicap, shared by both partners. A small number shows holes played when a round is partial.</p>
+    <div class="list"><table class="std pr"><thead><tr><th>#</th><th>Player</th><th class="r">Fri</th><th class="r">Sat</th><th class="r">Sun</th><th class="r">Wknd</th></tr></thead><tbody>` +
+    R.map((r, i) => `<tr class="${TEAMCLS[r.team]}"><td class="num">${i + 1}</td><td><span class="tname"><span class="chip-dot"></span>${esc(pName(r.id))}</span></td><td class="r num">${per(r.fri)}</td><td class="r num">${per(r.sat)}</td><td class="r num">${per(r.sun)}</td><td class="r big num">${f(r.avg)}</td></tr>`).join('') +
+    `</tbody></table></div>`;
+}
 function matchRow(ta, tb, aIds, bIds, st, extra) {
   const pa = TEAMCLS[ta], pb = TEAMCLS[tb];
   let pill = '';
@@ -1223,6 +1265,7 @@ function renderBoard(c, sc) {
       matchRow(g.ta, g.tb, g.a, g.b, g.total.status, `18 holes · worth ${fmtPts(c.matchPts.sunT)}`) + `</div>`;
   });
   h += `<p class="lede" style="margin-top:10px">* Capped at 18 strokes off the best player in the group.</p>`;
+  h += powerSection(c, rawSc || sc, W);
   h += PH.boardEnd;
   return h;
 }
