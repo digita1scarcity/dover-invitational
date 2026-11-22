@@ -409,17 +409,6 @@ details.fcards .card { margin-top: 6px }
 .sh-head .tname { color: var(--tc) }
 .sh-head .sh-st { margin-left: auto; color: var(--tc, var(--ink)); text-transform: none; letter-spacing: 0 }
 .card td.sh-run { color: var(--tc, var(--muted)); font-weight: 700; white-space: nowrap }
-
-a.wi-link { display: block; margin: 12px 0 4px; padding: 11px 14px; border: 1px solid var(--edge); background: var(--surface); color: var(--green); font-weight: 600; text-decoration: none; font-size: 14px }
-.wi-pair { margin-top: 10px }
-.wi-pair button { font-size: 17px }
-.wi-row { padding: 12px 0; border-bottom: 1px dotted var(--line) }
-.wi-row .meta { margin: 3px 0 8px }
-.wi-b { grid-template-columns: repeat(3, minmax(0, 1fr)) }
-.wi-b button { font-size: 13px }
-.wi-final { font-weight: 700; color: var(--tc, var(--ink)) }
-.wi-live { font-size: 12.5px; color: var(--muted); margin-bottom: 6px }
-h3.wi-h { margin: 22px 0 4px; font-size: 17px }
 </style>
 
 </head>
@@ -605,7 +594,6 @@ const SAT_MATCHES = [
 ];
 // Nov 18 (Josh): Josh and Nolan v Dan and Micah, Josh v Dan; Fromer and Greg take Daniel and Jeremy.
 function sunGroups(cfg) {
-  if (cfg && cfg._groups) return cfg._groups;
   return [
     { a: ['greg', 'josh'], b: ['dan', 'micah'] },
     { a: ['fromer', 'nolan'], b: ['jeremy'] },
@@ -966,7 +954,7 @@ async function pushCfg() {
 }
 
 // ===== Routing =====
-const VIEWS = ['board', 'score', 'weather', 'setup', 'whatif'];
+const VIEWS = ['board', 'score', 'weather', 'setup'];
 const view = () => { const h = location.hash.replace('#', ''); return VIEWS.includes(h) ? h : 'board'; };
 window.addEventListener('hashchange', () => { render(); window.scrollTo(0, 0); });
 const saveUi = () => LS.set('cc.ui.v1', S.ui);
@@ -1019,82 +1007,11 @@ function render(opts = {}) {
     if (v === 'board') html = renderBoard(c, sc);
     else if (v === 'score') html = renderScore(c, sc);
     else if (v === 'weather') html = renderWeather(c);
-    else if (v === 'whatif') html = renderWhatIf(c, sc);
     else html = renderSetup(c);
   } catch (e) { html = `<p class="note">Something went wrong drawing this view: ${esc(e.message)}</p>`; }
   app.innerHTML = html;
 }
 
-// ---- What if (scenario generator) ----
-const WI = Object.assign({ pick: {} }, LS.get('cc.whatif.v3', {}));
-const wiSave = () => LS.set('cc.whatif.v3', WI);
-const wiKey = (type, a, b) => type + ':' + a.join('+') + '~' + b.join('+');
-function wiModel(c, sc) {
-  const W = weekend(c, sc);
-  const live = {};
-  const put = (k, m, st) => { live[k] = st; };
-  W.S.forEach(m => put(wiKey('sat', m.a, m.b), m, m.status));
-  W.U.forEach(g => { put(wiKey('sf', g.a, g.b), g, g.front.status); put(wiKey('sb', g.a, g.b), g, g.back.status); put(wiKey('st', g.a, g.b), g, g.total.status); });
-  const look = (type, a, b) => {
-    const k = wiKey(type, a, b), r = wiKey(type, b, a);
-    if (live[k]) return live[k];
-    if (live[r]) { const s = live[r]; return { ...s, winner: s.winner === 'A' ? 'B' : s.winner === 'B' ? 'A' : s.winner, leader: s.leader === 'A' ? 'B' : s.leader === 'B' ? 'A' : null }; }
-    return null;
-  };
-  const mk = (type, a, b, w, note) => {
-    const key = wiKey(type, a, b), st = look(type, a, b);
-    const locked = !!(st && st.final);
-    const res = locked ? st.winner : (WI.pick[key] || null);
-    return { key, type, a, b, ta: pTeam(a[0]), tb: pTeam(b[0]), w, note, st, locked, res };
-  };
-  const sat = W.S.map(m => mk('sat', m.a, m.b, c.matchPts.sat, `Sides ${m.A.hcp} vs ${m.B.hcp}. ` + strokeNote(m.recv === 'A' ? m.a : m.b, m.alloc, 'strokes')));
-  const sun = W.U.map(g => {
-    const fs = [...g.a, ...g.b].filter(id => g.fAlloc[id].given).map(id => `${pName(id)} ${g.fAlloc[id].given}`).join(', ') || 'no strokes';
-    return { gi: g.gi, rows: [mk('sf', g.a, g.b, c.matchPts.sunF, `Front 9 best ball. Strokes for the day: ${fs}`),
-      mk('sb', g.a, g.b, c.matchPts.sunB, 'Back 9 best ball'), mk('st', g.a, g.b, c.matchPts.sunT, '18 hole best ball')] };
-  });
-  const tot = {}; TEAMS.forEach(t => { tot[t.id] = { fri: 0, sat: 0, sun: 0, total: 0 }; });
-  W.F.teams.forEach(t => { tot[t.id].fri = t.thru ? t.pts : 0; });
-  let open = 0;
-  const add = (day, m) => {
-    if (!m.res) { open += m.w; return; }
-    if (m.res === 'A') tot[m.ta][day] += m.w; else if (m.res === 'B') tot[m.tb][day] += m.w;
-    else { tot[m.ta][day] += m.w / 2; tot[m.tb][day] += m.w / 2; }
-  };
-  sat.forEach(m => add('sat', m));
-  sun.forEach(g => g.rows.forEach(m => add('sun', m)));
-  TEAMS.forEach(t => { const x = tot[t.id]; x.total = x.fri + x.sat + x.sun; });
-  return { W, sat, sun, tot, open, friFinal: W.F.final };
-}
-function wiRow(m) {
-  const head = `<div class="who"><span class="${TEAMCLS[m.ta]} tname"><span class="chip-dot"></span>${names(m.a)}</span><span class="vs">vs</span><span class="${TEAMCLS[m.tb]} tname"><span class="chip-dot"></span>${names(m.b)}</span></div>`;
-  let body;
-  if (m.locked) {
-    const txt = m.res === 'H' ? 'Halved' : `${names(m.res === 'A' ? m.a : m.b)} won ${esc(m.st.text)}`;
-    body = `<div class="wi-final ${m.res === 'H' ? '' : TEAMCLS[m.res === 'A' ? m.ta : m.tb]}">Final: ${txt}</div>`;
-  } else {
-    const liveNote = m.st && m.st.played ? `<div class="wi-live">Live now: ${m.st.leader ? names(m.st.leader === 'A' ? m.a : m.b) + ' ' : ''}${esc(m.st.text)}</div>` : '';
-    body = liveNote + `<div class="drv-b wi-b">` +
-      [['A', names(m.a)], ['H', 'Halved'], ['B', names(m.b)]].map(([v, lab]) => `<button data-act="wi" data-k="${m.key}" data-v="${v}" aria-pressed="${m.res === v}">${esc(lab)}</button>`).join('') + `</div>`;
-  }
-  return `<div class="wi-row">${head}<div class="meta">${m.note} · worth ${fmtPts(m.w)}</div>${body}</div>`;
-}
-function renderWhatIf(c, sc) {
-  const M = wiModel(c, sc);
-  const ranked = [...TEAMS].sort((a, b) => M.tot[b.id].total - M.tot[a.id].total);
-  const posOf = id => { const v = M.tot[id].total; const ahead = TEAMS.filter(x => M.tot[x.id].total > v).length; const tied = TEAMS.filter(x => M.tot[x.id].total === v).length > 1; return (tied ? 'T' : '') + (ahead + 1); };
-  const picked = Object.keys(WI.pick).length;
-  let h = `<h2><span class="frame">SCENARIOS</span>What if</h2>
-    <p class="lede">Starts from the real results so far, with today's matches. Pick how each match still to be decided finishes and the standings below add it up. Nothing here changes the live scores, and your picks stay on this phone.</p>`;
-  h += `<div class="list"><table class="std"><thead><tr><th>Pos</th><th>Team</th><th class="r">Fri</th><th class="r">Sat</th><th class="r">Sun</th><th class="r">Total</th></tr></thead><tbody>` +
-    ranked.map(t => { const x = M.tot[t.id]; return `<tr class="${TEAMCLS[t.id]}"><td class="num">${posOf(t.id)}</td><td><span class="tname"><span class="chip-dot"></span>${t.name.replace('Team ', '')}</span></td><td class="r num">${fmtPts(x.fri)}</td><td class="r num">${fmtPts(x.sat)}</td><td class="r num">${fmtPts(x.sun)}</td><td class="r big num">${fmtPts(x.total)}</td></tr>`; }).join('') +
-    `</tbody></table></div><p class="lede" style="margin-top:6px">${M.open ? `${fmtPts(M.open)} points still unpicked.` : 'Every match is decided in this scenario.'}${M.friFinal ? '' : ' Friday is not final yet, so its points are as things stand.'}</p>`;
-  h += `<h3 class="wi-h">Saturday · Soule Park</h3><div class="list">` + M.sat.map(wiRow).join('') + `</div>`;
-  h += `<h3 class="wi-h">Sunday · Olivas Links</h3>`;
-  M.sun.forEach(g => { h += `<div class="eyebrow" style="margin:14px 0 6px">Group ${g.gi + 1}</div><div class="list">` + g.rows.map(wiRow).join('') + `</div>`; });
-  h += `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px"><button class="btn" data-act="wiclear" ${picked ? '' : 'disabled'}>Clear my picks</button><a class="btn" href="#board" style="text-decoration:none;color:inherit">Back to the board</a></div>`;
-  return h;
-}
 function matchRow(ta, tb, aIds, bIds, st, extra) {
   const pa = TEAMCLS[ta], pb = TEAMCLS[tb];
   let pill = '';
@@ -1273,7 +1190,6 @@ function renderBoard(c, sc) {
     `</tbody></table><div class="bfoot">` + (anyLive ? `If it ended now: ` + ranked.map(t => `<b>${t.name.replace('Team ', '')} ${fmtPts(W.tot[t.id].proj)}</b>`).join(' · ') + `<br>` : '') +
     `${fmtPts(possible)} points on the line</div></div><div class="onLine">Friday ${fmtPts(c.fri.pts.reduce((a, b) => a + b, 0))}, Saturday ${fmtPts(3 * c.matchPts.sat)}, Sunday ${fmtPts(3 * (c.matchPts.sunF + c.matchPts.sunB + c.matchPts.sunT))}. Saturday matches are worth ${fmtPts(c.matchPts.sat)}. Each Sunday match is worth ${fmtPts(c.matchPts.sunF)} for the front 9, ${fmtPts(c.matchPts.sunB)} for the back 9 and ${fmtPts(c.matchPts.sunT)} for the 18. A tie splits the points.</div>`;
 
-  h += `<a class="wi-link" href="#whatif">What if? Pick the rest of the results and see the final points →</a>`;
   h += PH.boardTop;
   // Friday
   const F = W.F;
@@ -1715,9 +1631,6 @@ document.addEventListener('click', ev => {
   const el = ev.target.closest('[data-act]'); if (!el) return;
   const act = el.dataset.act, c = cfg(), round = S.ui.round;
   if (act === 'wxrefresh') { loadWx(true); return; }
-  if (act === 'wi') { const k = el.dataset.k, v = el.dataset.v; if (WI.pick[k] === v) delete WI.pick[k]; else WI.pick[k] = v; wiSave(); render(); return; }
-  if (act === 'wipair') { WI.pair = el.dataset.v; wiSave(); render(); return; }
-  if (act === 'wiclear') { WI.pick = {}; wiSave(); render(); return; }
   if (act === 'rtcheck') {
     if (!S.db || !S.db.probe || S.rt === 'busy') return;
     S.rt = 'busy'; render();
