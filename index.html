@@ -411,6 +411,12 @@ details.fcards .card { margin-top: 6px }
 .card td.sh-run { color: var(--tc, var(--muted)); font-weight: 700; white-space: nowrap }
 
 table.pr td sup { font-size: 9px; color: var(--muted); margin-left: 1px }
+
+.fh-head.su, .fh-row.su { grid-template-columns: 40px repeat(2, minmax(0, 1fr)) 48px }
+.fu-row.su { grid-template-columns: minmax(0, 1fr) }
+.fu-row.su .fu-ppl { align-items: center }
+.su-p { color: var(--tc) }
+.su-run { font-weight: 700; font-size: 13px; color: var(--tc, var(--muted)); white-space: nowrap; text-align: right; padding-top: 3px }
 </style>
 
 </head>
@@ -1214,6 +1220,43 @@ function satDrives(W, sc) {
   return `<details class="fused sdrv" ${detOpen('sdrv')}><summary>Drives by player</summary>${rows}
     <p class="lede" style="margin-top:6px">How many holes each player's drive was used on each nine. The rule is one each per nine. Red means a player can no longer get one in.</p></details>`;
 }
+function sunUsed(W) {
+  const par = COURSES.sun.par;
+  const G = W.U.map(g => {
+    const done = ALL18.filter(h => g.total.res[h] !== null);
+    const side = (ids, h) => { const v = ids.map(id => g.pnet(id, h)); const b = Math.min(...v); return { b, who: ids.filter((id, i) => v[i] === b) }; };
+    return { g, done, side };
+  });
+  if (!G.some(x => x.done.length)) return '';
+  const rel = v => v === 0 ? 'E' : v > 0 ? '+' + v : '−' + Math.abs(v);
+  const tally = G.map(({ g, done, side }) => {
+    if (!done.length) return '';
+    const cnt = {};
+    done.forEach(h => ['a', 'b'].forEach(s => side(g[s], h).who.forEach(id => { cnt[id] = (cnt[id] || 0) + 1; })));
+    const sideRow = (ids, tm) => `<div class="fu-row su ${TEAMCLS[tm]}"><div class="fu-ppl"><span class="chip-dot"></span>` +
+      [...ids].sort((x, y) => (cnt[y] || 0) - (cnt[x] || 0)).map(id => `<span class="su-p">${esc(pName(id))} <b class="num">${cnt[id] || 0}</b></span>`).join('') + `</div></div>`;
+    return `<div class="eyebrow" style="margin:12px 0 2px">Group ${g.gi + 1} · ${done.length} holes</div>` + sideRow(g.a, g.ta) + sideRow(g.b, g.tb);
+  }).join('');
+  const holes = G.map(({ g, done, side }) => {
+    if (!done.length) return '';
+    let up = 0; const run = {};
+    ALL18.forEach(h => { if (g.total.res[h] !== null) { up += g.total.res[h]; run[h] = up; } });
+    const row = h => {
+      const r = g.total.res[h], u = run[h];
+      const cell = (ids, tm, won) => { const x = side(ids, h), d = x.b - par[h];
+        return `<div class="fh-t ${TEAMCLS[tm]} ${won ? 'low' : ''}"><div class="fh-s num">${x.b}<small class="${d < 0 ? 'under' : ''}">${rel(d)}</small></div><div class="fh-who">${x.who.map(id => `<span>${esc(pName(id))}</span>`).join('')}</div></div>`; };
+      const st = u === 0 ? 'AS' : `${Math.abs(u)} up`;
+      return `<div class="fh-row su"><div class="fh-h"><b>${h + 1}</b><span>Par ${par[h]}</span></div>` + cell(g.a, g.ta, r > 0) + cell(g.b, g.tb, r < 0) +
+        `<div class="su-run ${u ? TEAMCLS[u > 0 ? g.ta : g.tb] : ''}">${st}</div></div>`;
+    };
+    return `<div class="eyebrow" style="margin:12px 0 2px">Group ${g.gi + 1}</div><div class="fh-head su"><span></span><span class="${TEAMCLS[g.ta]} tname"><span class="chip-dot"></span>${names(g.a)}</span><span class="${TEAMCLS[g.tb]} tname"><span class="chip-dot"></span>${names(g.b)}</span><span>18</span></div>` +
+      [...done].reverse().map(row).join('');
+  }).join('');
+  return `<details class="fholes" ${detOpen('suholes')}><summary>Hole by hole</summary>${holes}
+    <p class="lede" style="margin-top:6px">Each side's counting net score and whose it was, newest hole first. Underlined won the hole, and 18 is where the 18-hole match stands after it.</p></details>
+    <details class="fused" ${detOpen('sused')}><summary>Scores used by player</summary>${tally}
+    <p class="lede" style="margin-top:6px">How many holes each player's net score was their side's best ball. When partners tie on a hole, each of them gets credit.</p></details>`;
+}
 function renderBoard(c, sc) {
   const rawSc = sc;
   sc = friView(sc);
@@ -1265,6 +1308,7 @@ function renderBoard(c, sc) {
       matchRow(g.ta, g.tb, g.a, g.b, g.total.status, `18 holes · worth ${fmtPts(c.matchPts.sunT)}`) + `</div>`;
   });
   h += `<p class="lede" style="margin-top:10px">* Capped at 18 strokes off the best player in the group.</p>`;
+  h += sunUsed(W);
   h += powerSection(c, rawSc || sc, W);
   h += PH.boardEnd;
   return h;
